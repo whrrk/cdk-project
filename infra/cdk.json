@@ -1,0 +1,17 @@
+{
+  "app": "npx ts-node bin/infra.ts",
+  "context": {
+    "dev": {
+      "stage": "dev",
+      "prefix": "Dev"
+    },
+    "stg": {
+      "stage": "stg",
+      "prefix": "Stg"
+    },
+    "prod": {
+      "stage": "prod",
+      "prefix": "Prod"
+    }
+  }
+}
