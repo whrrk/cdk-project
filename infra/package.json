@@ -8,7 +8,11 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "deploy:dev": "cdk deploy --all --context stage=dev --require-approval never",
+    "deploy:stg": "cdk deploy --all --context stage=stg --require-approval never",
+    "deploy:prod": "cdk deploy --all --context stage=prod --require-approval never",
+    "deploy:all": "npm run deploy:dev && npm run deploy:stg && npm run deploy:prod"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
