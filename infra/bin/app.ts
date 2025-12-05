@@ -1,24 +1,40 @@
 #!/usr/bin/env node
+import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { ApiStack } from '../lib/stacks/ApiStack';
+
+import { AuthStack } from '../lib/stacks/AuthStack';
+import { DatabaseStack } from '../lib/stacks/DatabaseStack';
 import { LambdaStack } from '../lib/stacks/LambdaStack';
+import { ApiStack } from '../lib/stacks/ApiStack';
 
 const app = new cdk.App();
-const stage = app.node.tryGetContext('stage'); // dev/stg/prod
+
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: 'ap-northeast-1',
+  region: process.env.CDK_DEFAULT_REGION,
 };
 
-// Lambda Stack
-const lambdaStack = new LambdaStack(app, `LambdaStack-${stage}`, {
+// 1) 認証 (Cognito)
+const authStack = new AuthStack(app, 'AuthStack', { env });
+
+// 2) DB (DynamoDB)
+const databaseStack = new DatabaseStack(app, 'DatabaseStack', { env });
+
+// 3) Lambda
+const lambdaStack = new LambdaStack(app, 'LambdaStack', {
   env,
-  stage,
+  userPool: authStack.userPool,
+  table: databaseStack.table,
 });
 
-// API Stack（Lambda Stack からLambdaを受け取る）
-new ApiStack(app, `ApiStack-${stage}`, {
+// 4) API Gateway
+const apiStack = new ApiStack(app, 'ApiStack', {
   env,
-  stage,
-  lambdas: lambdaStack.lambdas,
+  handler: lambdaStack.apiHandler,
+  userPool: authStack.userPool    // ← 新しく追加
 });
+
+// 学習順序を明示的に
+lambdaStack.addDependency(authStack);
+lambdaStack.addDependency(databaseStack);
+apiStack.addDependency(lambdaStack);

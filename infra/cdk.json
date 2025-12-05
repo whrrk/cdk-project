@@ -4,14 +4,6 @@
     "dev": {
       "stage": "dev",
       "prefix": "Dev"
-    },
-    "stg": {
-      "stage": "stg",
-      "prefix": "Stg"
-    },
-    "prod": {
-      "stage": "prod",
-      "prefix": "Prod"
     }
   }
 }

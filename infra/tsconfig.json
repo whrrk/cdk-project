@@ -21,6 +21,8 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
+    "outDir": "dist",   // JS / d.ts は dist 以下に出す
+    "rootDir": ".",     // bin, lib をルートとして扱う
     "typeRoots": [
       "./node_modules/@types"
     ]
