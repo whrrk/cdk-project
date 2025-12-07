@@ -9,7 +9,7 @@ function generateId(prefix) {
 
 // POST /courses/{courseId}/threads
 // input: { title, createdBy }
-async function createThread(courseId, input) {
+async function createThread(authUserId, courseId, input) {
   const threadId = input.threadId || generateId("thread");
 
   const item = {
@@ -38,7 +38,7 @@ async function createThread(courseId, input) {
 }
 
 // GET /courses/{courseId}/threads
-async function listThreads(courseId) {
+async function listThreads(authUserId, courseId) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
@@ -55,7 +55,7 @@ async function listThreads(courseId) {
 
 // POST /threads/{threadId}/messages
 // input: { senderId, body }
-async function postMessage(threadId, input) {
+async function postMessage(authUserId, threadId, input) {
   const timestamp = Date.now();
   const sk = `MSG#${timestamp}`;
 
@@ -80,7 +80,7 @@ async function postMessage(threadId, input) {
 }
 
 // GET /threads/{threadId}/messages
-async function listMessages(threadId) {
+async function listMessages(authUserId, threadId) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,

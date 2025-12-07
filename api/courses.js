@@ -9,7 +9,7 @@ function generateId(prefix) {
 }
 
 // GET /courses
-async function listCourses() {
+async function listCourses(authUserId) {
   const result = await docClient.send(
     new ScanCommand({
       TableName: TABLE_NAME,
@@ -25,7 +25,7 @@ async function listCourses() {
 
 // POST /courses
 // input: { title, description?, teacherId? }
-async function createCourse(input) {
+async function createCourse(authUserId, input) {
   const courseId = input.courseId || generateId("course");
 
   const item = {
@@ -51,7 +51,7 @@ async function createCourse(input) {
 
 // POST /courses/{courseId}/enroll
 // input: { userId, role: "TEACHER" | "STUDENT" }
-async function enrollCourse(courseId, input) {
+async function enrollCourse(authUserId, courseId, input) {
   const { userId, role } = input;
 
   if (!userId || !role) {
@@ -83,7 +83,7 @@ async function enrollCourse(courseId, input) {
 }
 
 // GET /courses/{courseId}/members
-async function listCourseMembers(courseId) {
+async function listCourseMembers(authUserId, courseId) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,

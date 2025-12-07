@@ -14,7 +14,22 @@ const {
 } = require("./threads");
 
 exports.handler = async (event) => {
-  const { httpMethod, resource, pathParameters, body } = event;
+  const {
+    httpMethod,
+    resource,
+    pathParameters = {},
+    body,
+    requestContext,
+  } = event;
+
+  const authorizer = requestContext && requestContext.authorizer;
+  const claims = authorizer && authorizer.claims;
+
+  const authUserId =
+    (claims && (claims["cognito:username"] || claims.sub)) || "anonymous";
+
+  console.log("authUserId:", authUserId);
+  console.log("resource:", resource, "method:", httpMethod);
 
   try {
     // body がある場合は一度だけ parse
@@ -22,24 +37,24 @@ exports.handler = async (event) => {
 
     // --- Courses ---
     if (resource === "/courses" && httpMethod === "GET") {
-      const items = await listCourses();
+      const items = await listCourses(authUserId);
       return response(200, items);
     }
 
     if (resource === "/courses" && httpMethod === "POST") {
-      const item = await createCourse(parsedBody || {});
+      const item = await createCourse(authUserId, parsedBody || {});
       return response(201, item);
     }
 
     if (resource === "/courses/{courseId}/enroll" && httpMethod === "POST") {
       const { courseId } = pathParameters;
-      const item = await enrollCourse(courseId, parsedBody || {});
+      const item = await enrollCourse(authUserId, courseId, parsedBody || {});
       return response(201, item);
     }
 
     if (resource === "/courses/{courseId}/members" && httpMethod === "GET") {
       const { courseId } = pathParameters;
-      const items = await listCourseMembers(courseId);
+      const items = await listCourseMembers(authUserId, courseId);
       return response(200, items);
     }
 
@@ -49,13 +64,13 @@ exports.handler = async (event) => {
       httpMethod === "POST"
     ) {
       const { courseId } = pathParameters;
-      const item = await createThread(courseId, parsedBody || {});
+      const item = await createThread(authUserId, courseId, parsedBody || {});
       return response(201, item);
     }
 
     if (resource === "/courses/{courseId}/threads" && httpMethod === "GET") {
       const { courseId } = pathParameters;
-      const items = await listThreads(courseId);
+      const items = await listThreads(authUserId, courseId);
       return response(200, items);
     }
 
@@ -64,7 +79,7 @@ exports.handler = async (event) => {
       httpMethod === "POST"
     ) {
       const { threadId } = pathParameters;
-      const item = await postMessage(threadId, parsedBody || {});
+      const item = await postMessage(authUserId, threadId, parsedBody || {});
       return response(201, item);
     }
 
@@ -73,7 +88,7 @@ exports.handler = async (event) => {
       httpMethod === "GET"
     ) {
       const { threadId } = pathParameters;
-      const items = await listMessages(threadId);
+      const items = await listMessages(authUserId, threadId);
       return response(200, items);
     }
 
@@ -87,7 +102,11 @@ exports.handler = async (event) => {
 function response(statusCode, body) {
   return {
     statusCode,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
+    },
     body: JSON.stringify(body),
   };
 }
