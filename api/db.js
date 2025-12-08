@@ -10,6 +10,7 @@ const {
   PutCommand,
   QueryCommand,
   ScanCommand,
+  GetCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({});
@@ -20,4 +21,5 @@ module.exports = {
   PutCommand,
   QueryCommand,
   ScanCommand,
+  GetCommand,
 };

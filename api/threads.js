@@ -43,9 +43,12 @@ async function listThreads(authUserId, courseId) {
     new QueryCommand({
       TableName: TABLE_NAME,
       IndexName: "GSI2",
-      KeyConditionExpression: "gsi2pk = :pk",
+      KeyConditionExpression: "#gpk = :gpk",
+      ExpressionAttributeNames: {
+        "#gpk": "gsi2pk",
+      },
       ExpressionAttributeValues: {
-        ":pk": `COURSE#${courseId}`,
+        ":gpk": `COURSE#${courseId}`,
       },
     })
   );
@@ -85,6 +88,10 @@ async function listMessages(authUserId, threadId) {
     new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+      },
       ExpressionAttributeValues: {
         ":pk": `THREAD#${threadId}`,
         ":sk": "MSG#",

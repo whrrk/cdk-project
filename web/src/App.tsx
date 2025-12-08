@@ -46,8 +46,6 @@ function App() {
 
   return (
     <div style={{ padding: 24, fontFamily: "sans-serif" }}>
-      <h1>Day4: React + Cognito Login</h1>
-
       <section style={{ marginBottom: 16 }}>
         {isLoggedIn ? (
           <>
@@ -66,7 +64,7 @@ function App() {
       </section>
 
       <section>
-        <h2>/courses を呼び出すテスト</h2>
+        <h2>/courses</h2>
         <button onClick={fetchCourses} disabled={!isLoggedIn || loading}>
           {loading ? "読み込み中..." : "GET /courses"}
         </button>

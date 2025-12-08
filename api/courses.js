@@ -13,9 +13,14 @@ async function listCourses(authUserId) {
   const result = await docClient.send(
     new ScanCommand({
       TableName: TABLE_NAME,
-      FilterExpression: "begins_with(pk, :pk)",
+      FilterExpression: "begins_with(#pk, :coursePrefix) AND #sk = :meta",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+      },
       ExpressionAttributeValues: {
-        ":pk": "COURSE#",
+        ":coursePrefix": "COURSE#",
+        ":meta": "META",
       },
     })
   );
@@ -46,7 +51,7 @@ async function createCourse(authUserId, input) {
     })
   );
 
-  return item;
+  return { courseId, ...item };
 }
 
 // POST /courses/{courseId}/enroll
@@ -59,17 +64,17 @@ async function enrollCourse(authUserId, courseId, input) {
   }
 
   const item = {
-    pk: `USER#${userId}`,
-    sk: `ENROLL#COURSE#${courseId}`,
+    pk: `ENROLL#COURSE#${courseId}`,
+    sk: `USER#${userId}`,
     type: "ENROLLMENT",
     userId,
     courseId,
-    role, // "TEACHER" | "STUDENT"
+    role: data.role || "student", // "TEACHER" | "STUDENT"
     createdAt: new Date().toISOString(),
 
     // GSI1: COURSE -> USERS
-    gsi1pk: `COURSE#${courseId}`,
-    gsi1sk: `ENROLL#USER#${userId}`,
+    gsi1pk: `USER#${userId}`, // USER→COURSE 一覧用
+    gsi1sk: `COURSE#${courseId}`,
   };
 
   await docClient.send(
@@ -87,10 +92,14 @@ async function listCourseMembers(authUserId, courseId) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      IndexName: "GSI1",
-      KeyConditionExpression: "gsi1pk = :pk",
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :userPrefix)",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+      },
       ExpressionAttributeValues: {
         ":pk": `COURSE#${courseId}`,
+        ":userPrefix": "USER#",
       },
     })
   );
