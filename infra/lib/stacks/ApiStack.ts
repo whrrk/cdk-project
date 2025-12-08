@@ -25,6 +25,11 @@ export class ApiStack extends Stack {
       deployOptions: {
         stageName: 'dev',
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigw.Cors.ALL_ORIGINS,
+        allowMethods: apigw.Cors.ALL_METHODS,
+        allowHeaders: ['*'], 
+      },
       defaultMethodOptions: {
         authorizer,
         authorizationType: apigw.AuthorizationType.COGNITO,
