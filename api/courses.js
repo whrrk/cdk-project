@@ -1,4 +1,5 @@
 // api/courses.js
+const { getAuthContext, requireRole } = require("./auth");
 const { docClient, PutCommand, QueryCommand, ScanCommand } = require("./db");
 
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -9,7 +10,7 @@ function generateId(prefix) {
 }
 
 // GET /courses
-async function listCourses(authUserId) {
+async function listCourses(auth) {
   const result = await docClient.send(
     new ScanCommand({
       TableName: TABLE_NAME,
@@ -30,7 +31,11 @@ async function listCourses(authUserId) {
 
 // POST /courses
 // input: { title, description?, teacherId? }
-async function createCourse(authUserId, input) {
+async function createCourse(auth, input) {
+  const ctx = await getAuthContext(auth);
+  console.log("Creating course with auth context:", ctx);
+  requireRole(ctx, ["TEACHER"]);
+
   const courseId = input.courseId || generateId("course");
 
   const item = {
@@ -55,25 +60,29 @@ async function createCourse(authUserId, input) {
 }
 
 // POST /courses/{courseId}/enroll
-// input: { userId, role: "TEACHER" | "STUDENT" }
-async function enrollCourse(authUserId, courseId, input) {
-  const { userId, role } = input;
-
-  if (!userId || !role) {
+// input: { userId, role: "STUDENT" }
+async function enrollCourse(auth, courseId, input) {
+  authUserId = auth.userId
+  if (!authUserId || !input.role) {
     throw new Error("userId と role は必須です");
   }
 
+  if(auth.role !== "STUDENT") {
+    throw new Error("enroll は STUDENT のみサポートされています");
+  }
+
+  console.log("Enrolling user", authUserId, "to course", courseId, "as", auth.role);
   const item = {
     pk: `ENROLL#COURSE#${courseId}`,
-    sk: `USER#${userId}`,
+    sk: `USER#${authUserId}`,
     type: "ENROLLMENT",
-    userId,
+    authUserId,
     courseId,
-    role: data.role || "student", // "TEACHER" | "STUDENT"
+    role: "student",
     createdAt: new Date().toISOString(),
 
     // GSI1: COURSE -> USERS
-    gsi1pk: `USER#${userId}`, // USER→COURSE 一覧用
+    gsi1pk: `USER#${authUserId}`, // USER→COURSE 一覧用
     gsi1sk: `COURSE#${courseId}`,
   };
 
@@ -88,7 +97,7 @@ async function enrollCourse(authUserId, courseId, input) {
 }
 
 // GET /courses/{courseId}/members
-async function listCourseMembers(authUserId, courseId) {
+async function listCourseMembers(auth, courseId) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
