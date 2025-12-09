@@ -1,7 +1,14 @@
+require('dotenv').config();
 const { getAuthContext, requireRole } = require("../auth");
 const { docClient, PutCommand, QueryCommand, ScanCommand } = require("../db");
+const TABLE_NAME = process.env.TABLE_NAME || 'LocalTable';
 
-const TABLE_NAME = process.env.TABLE_NAME;
+if (!TABLE_NAME) {
+  console.error("📛 TABLE_NAME is missing in Lambda environment!", process.env);
+  throw new Error("TABLE_NAME env missing");
+}
+
+console.log("✔️ TABLE_NAME:", TABLE_NAME);
 
 // 簡単なID生成（本番なら uuid 等を使う）
 
@@ -66,7 +73,7 @@ async function enrollCourse(auth, courseId, input) {
     throw new Error("userId と role は必須です");
   }
 
-  if(auth.role !== "STUDENT") {
+  if (auth.role !== "STUDENT") {
     throw new Error("enroll は STUDENT のみサポートされています");
   }
 
