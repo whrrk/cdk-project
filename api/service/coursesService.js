@@ -3,6 +3,7 @@ const { getAuthContext, requireRole } = require("../auth");
 const { docClient, PutCommand, QueryCommand, ScanCommand } = require("../db");
 const TABLE_NAME = process.env.TABLE_NAME || 'LocalTable';
 
+
 if (!TABLE_NAME) {
   console.error("📛 TABLE_NAME is missing in Lambda environment!", process.env);
   throw new Error("TABLE_NAME env missing");
