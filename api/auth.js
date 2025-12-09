@@ -21,4 +21,33 @@ function requireRole(ctx, allowedRoles) {
   }
 }
 
-module.exports =  { getAuthContext, requireRole };
+function buildAuthContext(requestContext) {
+  const authorizer = requestContext && requestContext.authorizer;
+  const claims = authorizer && authorizer.claims;
+  const userId =
+    (claims && (claims["cognito:username"] || claims.sub)) || "anonymous";
+
+  // ここで role を決める
+  const groupsRaw = claims && claims["cognito:groups"];
+  let groups = [];
+
+  if (Array.isArray(groupsRaw)) {
+    groups = groupsRaw;
+  } else if (typeof groupsRaw === "string") {
+    // Cognito が "TEACHER,STUDENT" みたいな文字列でくる場合もあるので一応ケア
+    groups = groupsRaw.split(",").map((g) => g.trim());
+  }
+
+  let role = "UNKNOWN";
+  if (groups.includes("TEACHER")) role = "TEACHER";
+  else if (groups.includes("STUDENT")) role = "STUDENT";
+
+  return {
+    userId,
+    role,
+    groups,
+    claims,
+  };
+}
+
+module.exports =  { getAuthContext, requireRole, buildAuthContext };

@@ -1,5 +1,4 @@
-// api/threads.js
-const { docClient, PutCommand, QueryCommand } = require("./db");
+const { docClient, PutCommand, QueryCommand } = require("../db");
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
@@ -50,6 +49,7 @@ async function ensureUserEnrolled(userId, courseId) {
 // input: { title, createdBy }
 async function createThread(auth, courseId, input) {
   if(auth.groups === "STUDENT") {
+    console.log("Checking enrollment for user:", auth.userId, "in course:", courseId);
     await ensureUserEnrolled(auth.userId, courseId);
   }
 
@@ -82,9 +82,10 @@ async function createThread(auth, courseId, input) {
 
 // GET /courses/{courseId}/threads
 async function listThreads(auth, courseId) {
-  if(auth.groups === "STUDENT") {
+  if(auth.groups.includes("STUDENT")) {
     await ensureUserEnrolled(auth.userId, courseId);
   }
+
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
@@ -110,7 +111,7 @@ async function postMessage(auth, threadId, input) {
     throw new Error("Thread not found");
   }
 
-  if(auth.groups === "STUDENT") {
+  if(auth.groups.includes("STUDENT")) {
     await ensureUserEnrolled(auth.userId, thread.courseId);
   }
   const timestamp = Date.now();
@@ -143,7 +144,7 @@ async function listMessages(auth, threadId) {
     throw new Error("Thread not found");
   }
 
-  if(auth.groups === "STUDENT") {
+  if(auth.groups.includes("STUDENT")) {
     await ensureUserEnrolled(auth.userId, thread.courseId);
   }
   

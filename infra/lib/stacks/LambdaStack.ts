@@ -11,24 +11,37 @@ export interface LambdaStackProps extends StackProps {
 }
 
 export class LambdaStack extends Stack {
-  public readonly apiHandler: lambda.Function;
+  public readonly courseHandler: lambda.Function;
+  public readonly threadHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
     const { table, userPool } = props;
 
-    this.apiHandler = new lambda.Function(this, 'ApiHandler', {
+    const commonEnv = {
+      TABLE_NAME: table.tableName,
+      USER_POOL_ID: userPool.userPoolId,
+    };
+    
+    // /courses 系用
+    this.courseHandler = new lambda.Function(this, 'CourseHandler', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',          // api/index.jsの exports.handler
-      code: lambda.Code.fromAsset('../api'), // フォルダを指定
-      environment: {
-        TABLE_NAME: table.tableName,
-        USER_POOL_ID: userPool.userPoolId,
-      },
+      handler: 'handler/courses.handler',          // api/courses.js の exports.handler
+      code: lambda.Code.fromAsset('../api'),
+      environment: commonEnv
+    });
+
+    // /threads 系用
+    this.threadHandler = new lambda.Function(this, 'ThreadHandler', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'handler/threads.handler',          // api/threads.js の exports.handler
+      code: lambda.Code.fromAsset('../api'),
+      environment: commonEnv,
     });
 
     // Lambdaに DynamoDB 権限付与
-    table.grantReadWriteData(this.apiHandler);
+    table.grantReadWriteData(this.courseHandler);
+    table.grantReadWriteData(this.threadHandler);
   }
 }

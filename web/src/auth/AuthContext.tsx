@@ -55,7 +55,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = () => {
     const redirect = encodeURIComponent(REDIRECT_URI);
 
-    // 今回は implicit flow (response_type=token) を使う
     const url =
       `${COGNITO_DOMAIN}/login?` +
       `client_id=${COGNITO_CLIENT_ID}` +

@@ -6,7 +6,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 
 export interface ApiStackProps extends StackProps {
-  handler: lambda.IFunction;
+  courseHandler: lambda.IFunction;
+  threadHandler: lambda.IFunction;
   userPool: cognito.IUserPool;
 }
 
@@ -45,30 +46,31 @@ export class ApiStack extends Stack {
       },
     });
 
-   const lambdaIntegration = new apigw.LambdaIntegration(props.handler);
+    const courseIntegration = new apigw.LambdaIntegration(props.courseHandler);
+    const threadIntegration = new apigw.LambdaIntegration(props.threadHandler);
 
     // ③ 以降の addMethod はオプション不要で「全部 Cognito 必須」になる
     const courses = this.restApi.root.addResource('courses');
-    courses.addMethod('GET', lambdaIntegration);
-    courses.addMethod('POST', lambdaIntegration);
+    courses.addMethod('GET', courseIntegration);
+    courses.addMethod('POST', courseIntegration);
 
     const course = courses.addResource('{courseId}');
-    course.addMethod('GET', lambdaIntegration);
+    course.addMethod('GET', courseIntegration);
 
     const enroll = course.addResource('enroll');
-    enroll.addMethod('POST', lambdaIntegration);
+    enroll.addMethod('POST', courseIntegration);
 
     const members = course.addResource('members');
-    members.addMethod('GET', lambdaIntegration);
+    members.addMethod('GET', courseIntegration);
 
     const courseThreads = course.addResource('threads');
-    courseThreads.addMethod('GET', lambdaIntegration);
-    courseThreads.addMethod('POST', lambdaIntegration);
+    courseThreads.addMethod('GET', threadIntegration);
+    courseThreads.addMethod('POST', threadIntegration);
 
     const threadsRoot = this.restApi.root.addResource('threads');
     const thread = threadsRoot.addResource('{threadId}');
     const messages = thread.addResource('messages');
-    messages.addMethod('GET', lambdaIntegration);
-    messages.addMethod('POST', lambdaIntegration);
+    messages.addMethod('GET', threadIntegration);
+    messages.addMethod('POST', threadIntegration);
   }
 }

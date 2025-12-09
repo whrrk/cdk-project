@@ -6,6 +6,7 @@ import { AuthStack } from '../lib/stacks/AuthStack';
 import { DatabaseStack } from '../lib/stacks/DatabaseStack';
 import { LambdaStack } from '../lib/stacks/LambdaStack';
 import { ApiStack } from '../lib/stacks/ApiStack';
+import { WebStack } from '../lib/stacks/WebStack';
 
 const app = new cdk.App();
 
@@ -30,7 +31,8 @@ const lambdaStack = new LambdaStack(app, 'LambdaStack', {
 // 4) API Gateway
 const apiStack = new ApiStack(app, 'ApiStack', {
   env,
-  handler: lambdaStack.apiHandler,
+  courseHandler: lambdaStack.courseHandler,
+  threadHandler: lambdaStack.threadHandler,
   userPool: authStack.userPool    // ← 新しく追加
 });
 
@@ -38,3 +40,7 @@ const apiStack = new ApiStack(app, 'ApiStack', {
 lambdaStack.addDependency(authStack);
 lambdaStack.addDependency(databaseStack);
 apiStack.addDependency(lambdaStack);
+
+const webStack = new WebStack(app, 'WebStack', { env });
+// API に依存させたい場合
+// webStack.addDependency(apiStack);

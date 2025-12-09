@@ -41,5 +41,11 @@ export class AuthStack extends Stack {
         },
       },
     );
+
+    this.userPool.addDomain('AppUserPoolDomain', {
+      cognitoDomain: {
+        domainPrefix: 'ledemy-test-app', 
+      },
+    });
   }
 }

@@ -1,16 +1,16 @@
-// api/courses.js
-const { getAuthContext, requireRole } = require("./auth");
-const { docClient, PutCommand, QueryCommand, ScanCommand } = require("./db");
+const { getAuthContext, requireRole } = require("../auth");
+const { docClient, PutCommand, QueryCommand, ScanCommand } = require("../db");
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
 // 簡単なID生成（本番なら uuid 等を使う）
+
 function generateId(prefix) {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
 // GET /courses
-async function listCourses(auth) {
+async function listCourses() {
   const result = await docClient.send(
     new ScanCommand({
       TableName: TABLE_NAME,
@@ -33,7 +33,6 @@ async function listCourses(auth) {
 // input: { title, description?, teacherId? }
 async function createCourse(auth, input) {
   const ctx = await getAuthContext(auth);
-  console.log("Creating course with auth context:", ctx);
   requireRole(ctx, ["TEACHER"]);
 
   const courseId = input.courseId || generateId("course");
