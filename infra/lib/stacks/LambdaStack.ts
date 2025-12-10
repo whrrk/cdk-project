@@ -43,5 +43,7 @@ export class LambdaStack extends Stack {
     // Lambdaに DynamoDB 権限付与
     table.grantReadWriteData(this.courseHandler);
     table.grantReadWriteData(this.threadHandler);
+    userPool.grant(this.courseHandler, 'cognito-idp:AdminGetUser');
+    userPool.grant(this.threadHandler, 'cognito-idp:AdminGetUser');
   }
 }

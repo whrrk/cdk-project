@@ -2,11 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 
-import { AuthStack } from '../lib/stacks/AuthStack';
-import { DatabaseStack } from '../lib/stacks/DatabaseStack';
-import { LambdaStack } from '../lib/stacks/LambdaStack';
-import { ApiStack } from '../lib/stacks/ApiStack';
-import { WebStack } from '../lib/stacks/WebStack';
+import { PipelineStack } from '../lib/stacks/PipelineStack';
 
 const app = new cdk.App();
 
@@ -15,32 +11,15 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
-// 1) 認証 (Cognito)
-const authStack = new AuthStack(app, 'AuthStack', { env });
-
-// 2) DB (DynamoDB)
-const databaseStack = new DatabaseStack(app, 'DatabaseStack', { env });
-
-// 3) Lambda
-const lambdaStack = new LambdaStack(app, 'LambdaStack', {
+// パイプライン本体だけ作る
+new PipelineStack(app, 'ProjectPipelineStack', {
   env,
-  userPool: authStack.userPool,
-  table: databaseStack.table,
+  // 自分の GitHub リポジトリに書き換え
+  githubRepo: 'whrrk/cdk-project',
+  githubBranch: 'master',
+  // CodeStar Connections で作った接続の ARN に書き換え
+  githubConnectionArn:
+    'arn:aws:codeconnections:ap-northeast-1:749339776410:connection/6d1b74b2-623d-4cea-89ba-19698600b1fc',
 });
 
-// 4) API Gateway
-const apiStack = new ApiStack(app, 'ApiStack', {
-  env,
-  courseHandler: lambdaStack.courseHandler,
-  threadHandler: lambdaStack.threadHandler,
-  userPool: authStack.userPool    // ← 新しく追加
-});
-
-// 学習順序を明示的に
-lambdaStack.addDependency(authStack);
-lambdaStack.addDependency(databaseStack);
-apiStack.addDependency(lambdaStack);
-
-const webStack = new WebStack(app, 'WebStack', { env });
-// API に依存させたい場合
-// webStack.addDependency(apiStack);
+app.synth();

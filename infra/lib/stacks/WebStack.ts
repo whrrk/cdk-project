@@ -2,8 +2,8 @@
 import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as path from 'path';
 import { FrontendDeploy } from '../construcets/FrontendDeploy';
-
 
 export interface WebStackProps extends StackProps {}
 
@@ -14,8 +14,9 @@ export class WebStack extends Stack {
     super(scope, id, props);
 
     const frontend = new FrontendDeploy(this, 'Frontend', {
-      buildOutputPath: '../web/dist', // ← web で npm run build した成果物
-      spaFallback: true,              // SPA 前提なら true 推奨
+      // stacks/ から見て ../../web/dist
+      buildOutputPath: path.join(__dirname, '..', '..', '..', 'web', 'dist'),
+      spaFallback: true,
     });
 
     this.distribution = frontend.distribution;
