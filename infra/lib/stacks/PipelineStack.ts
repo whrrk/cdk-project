@@ -41,7 +41,7 @@ export class PipelineStack extends Stack {
           }
         ),
         // ← Synth では envFromCfnOutputs は使わない（Stack デプロイ前だから）
-        commands: ["npm ci", "npx cdk synth"],
+        commands: ["npm install", "npx cdk synth"],
         primaryOutputDirectory: "cdk.out",
         buildEnvironment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
@@ -88,7 +88,7 @@ export class PipelineStack extends Stack {
           "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID",
           "VITE_REDIRECT_URL=$FRONTEND_URL",
           "EOF",
-          "npm ci",
+          "npm install",
           "npm run build",
           "cd ..",
         ],
