@@ -1,5 +1,5 @@
 // lib/AuthStack.ts
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 
@@ -8,6 +8,8 @@ export interface AuthStackProps extends StackProps {}
 export class AuthStack extends Stack {
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
+  public readonly cognitoDomainOutput: CfnOutput;
+  public readonly cognitoClientIdOutput: CfnOutput;
 
   constructor(scope: Construct, id: string, props?: AuthStackProps) {
     super(scope, id, props);
@@ -45,10 +47,18 @@ export class AuthStack extends Stack {
     const stack = Stack.of(this);  
     const stagePrefix = stack.stackName.toLowerCase();
 
-    this.userPool.addDomain('AppUserPoolDomain', {
+    const domain = this.userPool.addDomain('AppUserPoolDomain', {
       cognitoDomain: {
         domainPrefix: `ledemy-${stagePrefix}`.substring(0, 63), 
       },
+    });
+
+    this.cognitoDomainOutput = new CfnOutput(this, "CognitoDomain", {
+      value: domain.baseUrl(), // 例: https://your-prefix.auth.ap-northeast-1.amazoncognito.com
+    });
+
+    this.cognitoClientIdOutput = new CfnOutput(this, "CognitoClientId", {
+      value: this.userPoolClient.userPoolClientId,
     });
   }
 }

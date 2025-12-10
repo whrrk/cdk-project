@@ -8,6 +8,7 @@ import { FrontendDeploy } from '../construcets/FrontendDeploy';
 export interface WebStackProps extends StackProps {}
 
 export class WebStack extends Stack {
+  public readonly apiUrlOutput: CfnOutput;
   public readonly distribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props: WebStackProps) {
@@ -21,7 +22,7 @@ export class WebStack extends Stack {
 
     this.distribution = frontend.distribution;
 
-    new CfnOutput(this, 'FrontendDistributionDomainName', {
+    this.apiUrlOutput = new CfnOutput(this, 'FrontendDistributionDomainName', {
       value: this.distribution.domainName,
     });
   }

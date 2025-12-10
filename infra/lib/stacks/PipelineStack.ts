@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps,CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { DevStage } from './DevStage';
@@ -10,6 +10,10 @@ export interface PipelineStackProps extends StackProps {
   readonly githubConnectionArn?: string; // CodeStar Connections を使うなら
   readonly stageName?: string;
   readonly stagePrefix?: string;
+  readonly apiUrlOutput: CfnOutput;
+  readonly cognitoDomainOutput: CfnOutput;
+  readonly cognitoClientIdOutput: CfnOutput;
+  readonly frontendUrlOutput: CfnOutput;
 }
 
 export class PipelineStack extends Stack {
@@ -27,6 +31,13 @@ export class PipelineStack extends Stack {
             connectionArn: props.githubConnectionArn!,
           },
         ),
+        envFromCfnOutputs: {
+          API_URL: props.apiUrlOutput,
+          COGNITO_DOMAIN: props.cognitoDomainOutput,
+          COGNITO_CLIENT_ID: props.cognitoClientIdOutput,
+          FRONTEND_URL: props.frontendUrlOutput,
+
+        },
         commands: [
           'echo "[Step] node version (before)"',
           'node -v || echo "node not found"',
@@ -34,6 +45,12 @@ export class PipelineStack extends Stack {
           // 1) web build
           'echo "[Step] build frontend"',
           'cd web',
+          "cat <<EOF > .env.production",
+          "VITE_API_BASE_URL=$API_URL",
+          "VITE_COGNITO_DOMAIN=$COGNITO_DOMAIN",
+          "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID",
+          "VITE_REDIRECT_URL=$FRONTEND_URL",
+          "EOF",
           'npm ci',
           'npm run build',
           'cd ..',
