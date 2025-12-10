@@ -82,12 +82,15 @@ export class PipelineStack extends Stack {
 
           'echo "[Step] build frontend"',
           "cd web",
-          "cat <<EOF > .env.production",
-          "VITE_API_BASE_URL=$API_URL",
-          "VITE_COGNITO_DOMAIN=$COGNITO_DOMAIN",
-          "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID",
-          "VITE_REDIRECT_URL=$FRONTEND_URL",
-          "EOF",
+
+          "rm -f .env.production",
+          "echo \"VITE_API_BASE_URL=$API_URL\" >> .env.production",
+          "echo \"VITE_COGNITO_DOMAIN=$COGNITO_DOMAIN\" >> .env.production",
+          "echo \"VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID\" >> .env.production",
+          "echo \"VITE_REDIRECT_URL=$FRONTEND_URL\" >> .env.production",
+
+          "echo '[Step] show .env.production'",
+          "cat .env.production",
 
           "npm ci",
           "npm run build",
