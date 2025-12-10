@@ -1,5 +1,5 @@
 // lib/ApiStack.ts
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps,CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -13,6 +13,7 @@ export interface ApiStackProps extends StackProps {
 
 export class ApiStack extends Stack {
   public readonly restApi: apigw.RestApi;
+  public readonly apiUrlOutput: CfnOutput;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -35,6 +36,11 @@ export class ApiStack extends Stack {
         authorizer,
         authorizationType: apigw.AuthorizationType.COGNITO,
       },
+    });
+
+
+    this.apiUrlOutput = new CfnOutput(this, "ApiUrl", {
+      value: this.restApi.url ?? "",
     });
 
     this.restApi.addGatewayResponse('UnauthorizedResponse', {
