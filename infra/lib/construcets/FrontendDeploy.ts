@@ -4,15 +4,8 @@ import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
 export interface FrontendDeployProps {
-  /**
-   * ビルド済みフロントのパス（infra ディレクトリからの相対パス）
-   * 例: "../web/dist"
-   */
-  buildOutputPath: string;
-
   /**
    * SPA 用に 404 を index.html にフォールバックするか
    */
@@ -37,16 +30,19 @@ export class FrontendDeploy extends Construct {
     this.bucket.grantRead(oai);
 
     // 3) CloudFront Distribution
-    this.distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
-      defaultRootObject: 'index.html',
-      defaultBehavior: {
-      origin: origins.S3BucketOrigin.withOriginAccessIdentity(this.bucket, {
-        originAccessIdentity: oai,
-      }),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      },
-      errorResponses: props.spaFallback
-        ? [
+    this.distribution = new cloudfront.Distribution(
+      this,
+      'FrontendDistribution',
+      {
+        defaultRootObject: 'index.html',
+        defaultBehavior: {
+          origin: origins.S3BucketOrigin.withOriginAccessIdentity(this.bucket, {
+            originAccessIdentity: oai,
+          }),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        },
+        errorResponses: props.spaFallback
+          ? [
             {
               httpStatus: 404,
               responseHttpStatus: 200,
@@ -54,15 +50,11 @@ export class FrontendDeploy extends Construct {
               ttl: Duration.minutes(1),
             },
           ]
-        : [],
-    });
+          : [],
+      }
+    );
 
-    // 4) デプロイ & キャッシュ無効化
-    new s3deploy.BucketDeployment(this, 'DeployFrontend', {
-      sources: [s3deploy.Source.asset(props.buildOutputPath)],
-      destinationBucket: this.bucket,
-      distribution: this.distribution,
-      distributionPaths: ['/*'], // CloudFront invalidation
-    });
+    // ❌ ここではもうデプロイしない
+    // new s3deploy.BucketDeployment(...)
   }
 }

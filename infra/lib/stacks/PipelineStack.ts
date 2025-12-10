@@ -6,6 +6,7 @@ import {
   CodePipelineSource,
 } from "aws-cdk-lib/pipelines";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { AppStage } from "../stage/AppStage";
 
 export interface PipelineStackProps extends StackProps {
@@ -39,7 +40,7 @@ export class PipelineStack extends Stack {
         ),
         // ← Synth では envFromCfnOutputs は使わない（Stack デプロイ前だから）
         commands: ["cd infra", "npm ci", "npx cdk synth"],
-        primaryOutputDirectory: "cdk.out",
+        primaryOutputDirectory: "infra/cdk.out",
         buildEnvironment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         },
@@ -72,6 +73,8 @@ export class PipelineStack extends Stack {
           COGNITO_DOMAIN: appStage.cognitoDomainOutput,
           COGNITO_CLIENT_ID: appStage.cognitoClientIdOutput,
           FRONTEND_URL: appStage.frontendUrlOutput,
+          WEB_BUCKET_NAME: appStage.webBucketNameOutput,
+          WEB_DISTRIBUTION_ID: appStage.webDistributionIdOutput,
         },
         commands: [
           'echo "[Step] node version (before)"',
@@ -85,9 +88,31 @@ export class PipelineStack extends Stack {
           "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID",
           "VITE_REDIRECT_URL=$FRONTEND_URL",
           "EOF",
-          "npm install",
+
+          "npm ci",
           "npm run build",
+
+          'echo "[Step] deploy to S3 / CloudFront"',
+          "aws --version || echo 'aws cli not found'",
+
+          // dist -> S3
+          "aws s3 sync dist s3://$WEB_BUCKET_NAME --delete",
+
+          // CloudFront 캐시 날리기
+          "aws cloudfront create-invalidation --distribution-id $WEB_DISTRIBUTION_ID --paths '/*'",
+
           "cd ..",
+        ],
+        rolePolicyStatements: [
+          new iam.PolicyStatement({
+            actions: [
+              's3:PutObject',
+              's3:DeleteObject',
+              's3:ListBucket',
+              'cloudfront:CreateInvalidation',
+            ],
+            resources: ['*'],
+          }),
         ],
       })
     );

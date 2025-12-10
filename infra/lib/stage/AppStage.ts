@@ -12,6 +12,8 @@ export class AppStage extends Stage {
   public readonly cognitoDomainOutput: CfnOutput;
   public readonly cognitoClientIdOutput: CfnOutput;
   public readonly frontendUrlOutput: CfnOutput;
+  public readonly webBucketNameOutput: CfnOutput;
+  public readonly webDistributionIdOutput: CfnOutput;
 
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
@@ -49,5 +51,7 @@ export class AppStage extends Stage {
     this.cognitoDomainOutput = auth.cognitoDomainOutput;
     this.cognitoClientIdOutput = auth.cognitoClientIdOutput;
     this.frontendUrlOutput = front.frontUrlOutput;
+    this.webBucketNameOutput = front.bucketNameOutput;
+    this.webDistributionIdOutput = front.distributionIdOutput;
   }
 }
