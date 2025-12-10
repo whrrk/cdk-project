@@ -8,9 +8,6 @@ import {
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import { AppStage } from "../stage/AppStage";
 
-// DevStage は今回使わないので一旦コメントアウト
-// import { DevStage } from './DevStage';
-
 export interface PipelineStackProps extends StackProps {
   readonly githubRepo?: string; // "user/repo"
   readonly githubBranch?: string; // デフォルト "main"
