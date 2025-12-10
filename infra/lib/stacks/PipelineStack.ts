@@ -5,9 +5,11 @@ import { DevStage } from './DevStage';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 
 export interface PipelineStackProps extends StackProps {
-  readonly githubRepo: string;       // "user/repo"
+  readonly githubRepo?: string;       // "user/repo"
   readonly githubBranch?: string;    // デフォルト "main"
   readonly githubConnectionArn?: string; // CodeStar Connections を使うなら
+  readonly stageName?: string;
+  readonly stagePrefix?: string;
 }
 
 export class PipelineStack extends Stack {
@@ -19,7 +21,7 @@ export class PipelineStack extends Stack {
       selfMutation: true,
       synth: new CodeBuildStep('Synth', {
         input: CodePipelineSource.connection(
-          props.githubRepo,
+          props.githubRepo ?? 'local-repo',
           props.githubBranch ?? 'master',
           {
             connectionArn: props.githubConnectionArn!,

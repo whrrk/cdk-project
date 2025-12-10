@@ -3,7 +3,9 @@
   "context": {
     "dev": {
       "stage": "dev",
-      "prefix": "Dev"
+      "githubRepo": "whrrk/cdk-project",
+      "githubBranch": "master",
+      "githubConnectionArn":"arn:aws:codeconnections:ap-northeast-1:749339776410:connection/6d1b74b2-623d-4cea-89ba-19698600b1fc"
     }
   }
 }

@@ -11,15 +11,18 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
+// cdk.json の context.dev を取得
+const dev = app.node.tryGetContext("dev");
+
 // パイプライン本体だけ作る
 new PipelineStack(app, 'ProjectPipelineStack', {
   env,
-  // 自分の GitHub リポジトリに書き換え
-  githubRepo: 'whrrk/cdk-project',
-  githubBranch: 'master',
+  githubRepo: dev.githubRepo,
+  githubBranch: dev.githubBranch,
   // CodeStar Connections で作った接続の ARN に書き換え
-  githubConnectionArn:
-    'arn:aws:codeconnections:ap-northeast-1:749339776410:connection/6d1b74b2-623d-4cea-89ba-19698600b1fc',
+  githubConnectionArn: dev.githubConnectionArn,
+  stageName: dev.stage,
+  stagePrefix: dev.prefix,
 });
 
 app.synth();
