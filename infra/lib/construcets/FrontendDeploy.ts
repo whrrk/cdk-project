@@ -53,8 +53,5 @@ export class FrontendDeploy extends Construct {
           : [],
       }
     );
-
-    // ❌ ここではもうデプロイしない
-    // new s3deploy.BucketDeployment(...)
   }
 }

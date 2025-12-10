@@ -101,11 +101,24 @@ export class PipelineStack extends Stack {
           // dist -> S3
           "aws s3 sync dist s3://$WEB_BUCKET_NAME --delete",
 
-          // CloudFront 캐시 날리기
+          // CloudFront cache 飛ばす
           "aws cloudfront create-invalidation --distribution-id $WEB_DISTRIBUTION_ID --paths '/*'",
 
           "cd ..",
         ],
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+        },
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          version: "0.2",
+          phases: {
+            install: {
+              "runtime-versions": {
+                nodejs: 20,
+              },
+            },
+          },
+        }),
         rolePolicyStatements: [
           new iam.PolicyStatement({
             actions: [
