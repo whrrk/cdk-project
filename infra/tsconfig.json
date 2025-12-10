@@ -25,6 +25,9 @@
     "rootDir": ".",     // bin, lib をルートとして扱う
     "typeRoots": [
       "./node_modules/@types"
+    ],
+    "types": [
+      "node" 
     ]
   },
   "exclude": [
