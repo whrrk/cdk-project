@@ -42,9 +42,12 @@ export class AuthStack extends Stack {
       },
     );
 
+    const stack = Stack.of(this);  
+    const stagePrefix = stack.stackName.toLowerCase();
+
     this.userPool.addDomain('AppUserPoolDomain', {
       cognitoDomain: {
-        domainPrefix: 'ledemy-test-app', 
+        domainPrefix: `ledemy-${stagePrefix}`.substring(0, 63), 
       },
     });
   }
