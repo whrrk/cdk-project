@@ -5,7 +5,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 
 export interface FrontendDeployProps {
   /**
@@ -63,7 +62,7 @@ export class FrontendDeploy extends Construct {
       sources: [s3deploy.Source.asset(props.buildOutputPath)],
       destinationBucket: this.bucket,
       distribution: this.distribution,
-      distributionPaths: ['/*'], // ← これが CloudFront invalidation
+      distributionPaths: ['/*'], // CloudFront invalidation
     });
   }
 }
