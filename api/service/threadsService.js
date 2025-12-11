@@ -1,7 +1,8 @@
-require('dotenv').config();
 const { docClient, PutCommand, QueryCommand } = require("../db");
-const TABLE_NAME = process.env.TABLE_NAME;
 
+const TABLE_NAME =process.env.TABLE_NAME ||"LocalTable"; // 最後 fallback
+
+// 簡単なID生成（本番なら uuid 等を使う）
 function generateId(prefix) {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }

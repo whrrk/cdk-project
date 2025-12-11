@@ -1,18 +1,9 @@
-require('dotenv').config();
 const { getAuthContext, requireRole } = require("../auth");
 const { docClient, PutCommand, QueryCommand, ScanCommand } = require("../db");
-const TABLE_NAME = process.env.TABLE_NAME || 'LocalTable';
 
-
-if (!TABLE_NAME) {
-  console.error("📛 TABLE_NAME is missing in Lambda environment!", process.env);
-  throw new Error("TABLE_NAME env missing");
-}
-
-console.log("✔️ TABLE_NAME:", TABLE_NAME);
+const TABLE_NAME = process.env.TABLE_NAME || "LocalTable"; // 最後 fallback
 
 // 簡単なID生成（本番なら uuid 等を使う）
-
 function generateId(prefix) {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
