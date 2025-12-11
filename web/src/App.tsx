@@ -290,7 +290,7 @@ function App() {
           marginBottom: 16,
         }}
       >
-        <h2>Courses</h2>
+        <h2>講座</h2>
         <div style={{ marginBottom: 8 }}>
           <button onClick={loadCourses} disabled={!isLoggedIn || loading}>
             {loading ? "Loading..." : "Reload Courses"}
@@ -373,7 +373,7 @@ function App() {
           }}
         >
           <h2>
-            Threads in Course:{" "}
+            講座　スレッド:{" "}
             {selectedCourse.title || extractCourseId(selectedCourse)}
           </h2>
           <div style={{ marginBottom: 8 }}>
@@ -410,9 +410,6 @@ function App() {
                   }}
                 >
                   <strong>{t.title}</strong>{" "}
-                  <span style={{ fontSize: 12, color: "#555" }}>
-                    [{threadId}]
-                  </span>
                 </li>
               );
             })}
@@ -430,8 +427,7 @@ function App() {
           }}
         >
           <h2>
-            Messages in Thread: {selectedThread.title} (
-            {extractThreadId(selectedThread)})
+            {selectedThread.title}　メッセージ 
           </h2>
           <div style={{ marginBottom: 8 }}>
             <input
