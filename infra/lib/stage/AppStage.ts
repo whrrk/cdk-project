@@ -1,6 +1,5 @@
 import { Stage, StageProps, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
-
 import { AuthStack } from "../stacks/AuthStack";
 import { ApiStack } from "../stacks/ApiStack";
 import { DatabaseStack } from "../stacks/DatabaseStack";

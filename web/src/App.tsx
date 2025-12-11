@@ -1,40 +1,16 @@
 // src/App.tsx
 import { useEffect, useState } from "react";
+import "./App.css";
 import { useAuth } from "./auth/AuthContext";
+import AuthSection from "./components/Auth/AuthSection";
+import CoursesSection from "./components/Courses/CoursesSection";
+import ThreadsSection from "./components/Threads/ThreadsSection";
+import type { Course, Message, Thread } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-type Course = {
-  courseId?: string;
-  pk?: string;
-  sk?: string;
-  title?: string;
-  description?: string;
-  createdAt?: string;
-  [key: string]: any;
-};
-
-type Thread = {
-  pk: string;
-  sk: string;
-  courseId: string;
-  title: string;
-  createdBy: string;
-  createdAt: string;
-  [key: string]: any;
-};
-
-type Message = {
-  pk: string;
-  sk: string;
-  body: string;
-  postedBy: string;
-  postedAt: string;
-  [key: string]: any;
-};
-
 function App() {
-  const { isLoggedIn, login, logout, idToken } = useAuth();
+  const { isLoggedIn, login, logout, idToken, userGroups } = useAuth();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [newCourseTitle, setNewCourseTitle] = useState("");
@@ -52,7 +28,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 共通 fetch ヘルパ
   const authedFetch = async (
     path: string,
     options: RequestInit = {}
@@ -73,7 +48,6 @@ function App() {
     return data;
   };
 
-  // --- Courses ---
   const loadCourses = async () => {
     if (!idToken) {
       setError("ログインが必要です");
@@ -92,12 +66,17 @@ function App() {
     }
   };
 
+  const canManageCourses = userGroups.some(
+    (group) => group === "TEACHER" || group === "ADMIN"
+  );
+
   const createCourse = async () => {
     if (!newCourseTitle.trim()) return;
+    if (!canManageCourses) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await authedFetch("/courses", {
+      await authedFetch("/courses", {
         method: "POST",
         body: JSON.stringify({
           title: newCourseTitle,
@@ -106,7 +85,6 @@ function App() {
       });
       setNewCourseTitle("");
       setNewCourseDesc("");
-      // すぐ一覧に反映
       await loadCourses();
     } catch (e: any) {
       console.error(e);
@@ -126,7 +104,6 @@ function App() {
         body: JSON.stringify({ role: "student" }),
       });
       setEnrollCourseId("");
-      // enroll 後の挙動は後で listCourses の実装と合わせる
     } catch (e: any) {
       console.error(e);
       setError(e.message ?? "Unknown error");
@@ -135,7 +112,6 @@ function App() {
     }
   };
 
-  // --- Threads ---
   const loadThreads = async (course: Course) => {
     if (!course) return;
     const courseId = extractCourseId(course);
@@ -161,8 +137,7 @@ function App() {
   const createThread = async () => {
     if (!selectedCourse) return;
     const courseId = extractCourseId(selectedCourse);
-    if (!courseId) return;
-    if (!newThreadTitle.trim()) return;
+    if (!courseId || !newThreadTitle.trim()) return;
     setLoading(true);
     setError(null);
     try {
@@ -180,7 +155,6 @@ function App() {
     }
   };
 
-  // --- Messages ---
   const loadMessages = async (thread: Thread) => {
     const threadId = extractThreadId(thread);
     if (!threadId) {
@@ -203,10 +177,9 @@ function App() {
   };
 
   const postMessage = async () => {
-    if (!selectedThread) return;
+    if (!selectedThread || !newMessageBody.trim()) return;
     const threadId = extractThreadId(selectedThread);
     if (!threadId) return;
-    if (!newMessageBody.trim()) return;
     setLoading(true);
     setError(null);
     try {
@@ -224,7 +197,18 @@ function App() {
     }
   };
 
-  // ヘルパ: Dynamo の pk / sk から ID 抜く
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourse(course);
+    setSelectedThread(null);
+    setMessages([]);
+    loadThreads(course);
+  };
+
+  const handleSelectThread = (thread: Thread) => {
+    setSelectedThread(thread);
+    loadMessages(thread);
+  };
+
   function extractCourseId(course: Course): string | null {
     if (course.courseId) return course.courseId;
     if (course.pk && course.pk.startsWith("COURSE#")) {
@@ -254,212 +238,142 @@ function App() {
   }, [isLoggedIn]);
 
   return (
-    <div style={{ padding: 24, fontFamily: "system-ui, sans-serif" }}>
-      {/* Auth */}
-      <section
-        style={{
-          padding: 16,
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          marginBottom: 16,
-        }}
-      >
-        <h2>認証</h2>
-        {isLoggedIn ? (
-          <>
-            <p>✅ ログイン中</p>
-            <button onClick={logout}>ログアウト</button>
-            <p style={{ fontSize: 12, marginTop: 8 }}>
-              idToken (先頭だけ): {idToken?.slice(0, 20)}...
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="kicker">Learning Portal</p>
+          <h1>LEdemy Course Hub</h1>
+          <p className="lead">
+            Cognitoでログインし、講座とスレッドを横断的に管理できるダッシュボードです。
+          </p>
+        </div>
+        <div className="header-meta">
+          <div className="meta-card">
+            <p className="meta-label">選択中の講座</p>
+            <p className="meta-value">
+              {selectedCourse?.title || "未選択"}
             </p>
-          </>
+          </div>
+          <div className="meta-card">
+            <p className="meta-label">選択中のスレッド</p>
+            <p className="meta-value">
+              {selectedThread?.title || "未選択"}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <AuthSection
+        className="panel-auth"
+        isLoggedIn={isLoggedIn}
+        login={login}
+        logout={logout}
+        idToken={idToken ?? null}
+      />
+
+      <main className="dashboard-grid">
+        <CoursesSection
+          className="span-2"
+          isLoggedIn={isLoggedIn}
+          loading={loading}
+          courses={courses}
+          selectedCourse={selectedCourse}
+          newCourseTitle={newCourseTitle}
+          newCourseDesc={newCourseDesc}
+          enrollCourseId={enrollCourseId}
+          onLoadCourses={loadCourses}
+          onCreateCourse={createCourse}
+          onEnroll={enroll}
+          onSelectCourse={handleSelectCourse}
+          onNewCourseTitleChange={setNewCourseTitle}
+          onNewCourseDescChange={setNewCourseDesc}
+          onEnrollCourseIdChange={setEnrollCourseId}
+          extractCourseId={extractCourseId}
+          canManageCourses={canManageCourses}
+        />
+
+        {selectedCourse ? (
+          <ThreadsSection
+            isLoggedIn={isLoggedIn}
+            loading={loading}
+            selectedCourse={selectedCourse}
+            threads={threads}
+            selectedThread={selectedThread}
+            newThreadTitle={newThreadTitle}
+            onCreateThread={createThread}
+            onSelectThread={handleSelectThread}
+            onNewThreadTitleChange={setNewThreadTitle}
+            extractCourseId={extractCourseId}
+            extractThreadId={extractThreadId}
+          />
         ) : (
-          <>
-            <p>❌ 未ログイン</p>
-            <button onClick={login}>Cognito でログイン</button>
-          </>
+          <section className="panel panel-placeholder">
+            <div className="panel-header">
+              <div>
+                <p className="kicker">Threads</p>
+                <h2>講座が未選択です</h2>
+              </div>
+            </div>
+            <p className="panel-subtitle">
+              右側のスレッドを表示するには、先に講座を選択してください。
+            </p>
+          </section>
         )}
-      </section>
 
-      {/* Courses */}
-      <section
-        style={{
-          padding: 16,
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          marginBottom: 16,
-        }}
-      >
-        <h2>講座</h2>
-        <div style={{ marginBottom: 8 }}>
-          <button onClick={loadCourses} disabled={!isLoggedIn || loading}>
-            {loading ? "Loading..." : "Reload Courses"}
-          </button>
-        </div>
-        <div style={{ marginBottom: 8 }}>
-          <input
-            placeholder="Course title"
-            value={newCourseTitle}
-            onChange={(e) => setNewCourseTitle(e.target.value)}
-          />
-          <input
-            placeholder="Description"
-            value={newCourseDesc}
-            onChange={(e) => setNewCourseDesc(e.target.value)}
-            style={{ marginLeft: 8 }}
-          />
-          <button
-            onClick={createCourse}
-            disabled={!isLoggedIn || loading || !newCourseTitle.trim()}
-            style={{ marginLeft: 8 }}
-          >
-            Create Course
-          </button>
-        </div>
-
-        <div style={{ marginBottom: 8 }}>
-          <input
-            placeholder="CourseId to enroll"
-            value={enrollCourseId}
-            onChange={(e) => setEnrollCourseId(e.target.value)}
-          />
-          <button
-            onClick={enroll}
-            disabled={!isLoggedIn || loading || !enrollCourseId.trim()}
-            style={{ marginLeft: 8 }}
-          >
-            Enroll
-          </button>
-        </div>
-
-        <ul>
-          {courses.map((c) => {
-            const courseId = extractCourseId(c);
-            const isSelected =
-              selectedCourse && extractCourseId(selectedCourse) === courseId;
-            return (
-              <li
-                key={courseId || c.pk}
-                style={{
-                  cursor: "pointer",
-                  padding: 4,
-                  background: isSelected ? "#eef" : undefined,
-                }}
-                onClick={() => {
-                  setSelectedCourse(c);
-                  setSelectedThread(null);
-                  setMessages([]);
-                  loadThreads(c);
-                }}
-              >
-                <strong>{c.title || "(no title)"}</strong>{" "}
-                <span style={{ fontSize: 12, color: "#555" }}>
-                  [{courseId}]
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      {/* Threads */}
-      {selectedCourse && (
-        <section
-          style={{
-            padding: 16,
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            marginBottom: 16,
-          }}
-        >
-          <h2>
-            講座　スレッド:{" "}
-            {selectedCourse.title || extractCourseId(selectedCourse)}
-          </h2>
-          <div style={{ marginBottom: 8 }}>
-            <input
-              placeholder="Thread title"
-              value={newThreadTitle}
-              onChange={(e) => setNewThreadTitle(e.target.value)}
-            />
-            <button
-              onClick={createThread}
-              disabled={!isLoggedIn || loading || !newThreadTitle.trim()}
-              style={{ marginLeft: 8 }}
-            >
-              Create Thread
-            </button>
-          </div>
-          <ul>
-            {threads.map((t) => {
-              const threadId = extractThreadId(t);
-              const isSelected =
-                selectedThread &&
-                extractThreadId(selectedThread) === threadId;
-              return (
-                <li
-                  key={threadId || t.pk}
-                  style={{
-                    cursor: "pointer",
-                    padding: 4,
-                    background: isSelected ? "#efe" : undefined,
-                  }}
-                  onClick={() => {
-                    setSelectedThread(t);
-                    loadMessages(t);
-                  }}
+        <section className="panel panel-messages span-2">
+          {selectedThread ? (
+            <>
+              <div className="panel-header">
+                <div>
+                  <p className="kicker">Messages</p>
+                  <h2>{selectedThread.title}</h2>
+                </div>
+              </div>
+              <p className="panel-subtitle">
+                {selectedThread.title} のディスカッションに参加しましょう。
+              </p>
+              <div className="form-inline">
+                <input
+                  className="input"
+                  placeholder="Message"
+                  value={newMessageBody}
+                  onChange={(e) => setNewMessageBody(e.target.value)}
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={postMessage}
+                  disabled={!isLoggedIn || loading || !newMessageBody.trim()}
                 >
-                  <strong>{t.title}</strong>{" "}
-                </li>
-              );
-            })}
-          </ul>
+                  Post
+                </button>
+              </div>
+              <ul className="messages-list">
+                {messages.map((message) => (
+                  <li key={message.sk} className="message-item">
+                    <p className="message-body">{message.body}</p>
+                    <p className="message-meta">
+                      by {message.postedBy} ・ {message.postedAt}
+                    </p>
+                  </li>
+                ))}
+                {messages.length === 0 && (
+                  <li className="empty-state">まだメッセージがありません</li>
+                )}
+              </ul>
+            </>
+          ) : (
+            <div className="empty-wrapper">
+              <p className="kicker">Messages</p>
+              <h2>スレッドを選択してください</h2>
+              <p className="panel-subtitle">
+                スレッドを選ぶと、ここにメッセージのタイムラインが表示されます。
+              </p>
+            </div>
+          )}
         </section>
-      )}
+      </main>
 
-      {/* Messages */}
-      {selectedThread && (
-        <section
-          style={{
-            padding: 16,
-            border: "1px solid #ddd",
-            borderRadius: 8,
-          }}
-        >
-          <h2>
-            {selectedThread.title}　メッセージ 
-          </h2>
-          <div style={{ marginBottom: 8 }}>
-            <input
-              placeholder="Message"
-              value={newMessageBody}
-              onChange={(e) => setNewMessageBody(e.target.value)}
-              style={{ width: "60%" }}
-            />
-            <button
-              onClick={postMessage}
-              disabled={!isLoggedIn || loading || !newMessageBody.trim()}
-              style={{ marginLeft: 8 }}
-            >
-              Post
-            </button>
-          </div>
-          <ul>
-            {messages.map((m) => (
-              <li key={m.sk}>
-                <span>{m.body}</span>{" "}
-                <span style={{ fontSize: 12, color: "#555" }}>
-                  by {m.postedBy} at {m.postedAt}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {error && (
-        <p style={{ color: "red", marginTop: 8 }}>Error: {error}</p>
-      )}
+      {error && <div className="alert alert-error">Error: {error}</div>}
     </div>
   );
 }
