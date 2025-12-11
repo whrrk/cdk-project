@@ -99,7 +99,7 @@ export class PipelineStack extends Stack {
           "aws --version || echo 'aws cli not found'",
 
           // dist -> S3
-          "aws s3 sync dist s3://$WEB_BUCKET_NAME --delete",
+          "aws s3 sync dist/ s3://$WEB_BUCKET_NAME --delete",
 
           // CloudFront cache 飛ばす
           "aws cloudfront create-invalidation --distribution-id $WEB_DISTRIBUTION_ID --paths '/*'",
