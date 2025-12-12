@@ -53,7 +53,7 @@ const CoursesSection = ({
           onClick={onLoadCourses}
           disabled={!isLoggedIn || loading}
         >
-          {loading ? "Loading..." : "Reload"}
+          {loading ? "読み込み中..." : "再読み込み"}
         </button>
       </div>
 
@@ -65,13 +65,13 @@ const CoursesSection = ({
         <div className="form-grid">
           <input
             className="input"
-            placeholder="Course title"
+            placeholder="講座タイトル"
             value={newCourseTitle}
             onChange={(e) => onNewCourseTitleChange(e.target.value)}
           />
           <input
             className="input"
-            placeholder="Description"
+            placeholder="概要"
             value={newCourseDesc}
             onChange={(e) => onNewCourseDescChange(e.target.value)}
           />
@@ -80,7 +80,7 @@ const CoursesSection = ({
             onClick={onCreateCourse}
             disabled={!isLoggedIn || loading || !newCourseTitle.trim()}
           >
-            Create Course
+            講座を作成
           </button>
         </div>
       )}
@@ -88,7 +88,7 @@ const CoursesSection = ({
       <div className="form-inline">
         <input
           className="input"
-          placeholder="CourseId to enroll"
+          placeholder="参加したい講座ID"
           value={enrollCourseId}
           onChange={(e) => onEnrollCourseIdChange(e.target.value)}
         />
@@ -97,7 +97,7 @@ const CoursesSection = ({
           onClick={onEnroll}
           disabled={!isLoggedIn || loading || !enrollCourseId.trim()}
         >
-          Enroll
+          参加する
         </button>
       </div>
 
