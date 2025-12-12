@@ -24,9 +24,7 @@ WEB_DIST_ID=$(aws cloudformation describe-stacks \
 echo "🪣 S3 Bucket: $WEB_BUCKET"
 echo "🌐 CloudFront Distribution: $WEB_DIST_ID"
 
-cd web
-
-npm run dev
+npm run build
 
 echo "🚀 Uploading frontend..."
 aws s3 sync dist/ s3://$WEB_BUCKET --delete \
@@ -36,6 +34,7 @@ echo "♻️ Creating CloudFront invalidation..."
 aws cloudfront create-invalidation \
   --distribution-id $WEB_DIST_ID \
   --paths '/*' \
+  --no-cli-pager \
   --profile $PROFILE --region $REGION
 
 echo "✅ Frontend deploy completed!"
