@@ -323,23 +323,18 @@ function App() {
           canManageCourses={canManageCourses}
         />
         {selectedCourse ? (
-          <div className="right-column">
-            <VideoSection
-              isLoggedIn={isLoggedIn}
-              loadingVideos={loadingVideos}
-              videos={videos}
-              selectedCourse={selectedCourse}
-              extractCourseId={extractCourseId}
-              onLoadVideos={(courseId) =>
-                selectedCourse && extractCourseId(selectedCourse) === courseId
-                  ? loadVideos(selectedCourse)
-                  : loadVideos({ ...selectedCourse, courseId } as Course) // 안전하게 하려면 그냥 loadVideos(selectedCourse)만 써도 됨
-              }
-              selectedVideoId={selectedVideoId}
-              onSelectVideo={setSelectedVideoId}
-            />
-
-            <ThreadsSection
+          <><VideoSection
+            isLoggedIn={isLoggedIn}
+            loadingVideos={loadingVideos}
+            videos={videos}
+            selectedCourse={selectedCourse}
+            extractCourseId={extractCourseId}
+            onLoadVideos={(courseId) => selectedCourse && extractCourseId(selectedCourse) === courseId
+              ? loadVideos(selectedCourse)
+              : loadVideos({ ...selectedCourse, courseId } as Course) // 안전하게 하려면 그냥 loadVideos(selectedCourse)만 써도 됨
+            }
+            selectedVideoId={selectedVideoId}
+            onSelectVideo={setSelectedVideoId} /><ThreadsSection
               isLoggedIn={isLoggedIn}
               loading={loading}
               selectedCourse={selectedCourse}
@@ -350,9 +345,7 @@ function App() {
               onSelectThread={handleSelectThread}
               onNewThreadTitleChange={setNewThreadTitle}
               extractCourseId={extractCourseId}
-              extractThreadId={extractThreadId}
-            />
-          </div>
+              extractThreadId={extractThreadId} /></>
         ) : (
           <section className="panel panel-placeholder">
             <div className="panel-header">
@@ -366,7 +359,6 @@ function App() {
             </p>
           </section>
         )}
-
         <section className="panel panel-messages span-2">
           {selectedThread ? (
             <>
