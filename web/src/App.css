@@ -5,7 +5,9 @@
   background-color: #0f172a;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -344,5 +346,17 @@ body {
 
   .span-2 {
     grid-column: span 1;
+  }
+
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .video-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
   }
 }

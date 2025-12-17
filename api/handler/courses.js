@@ -1,7 +1,7 @@
 // api/courses.js
 const { listCourses, createCourse, enrollCourse, listCourseMembers } = require('../service/coursesService');
 const { buildAuthContext } = require('../auth');
-const { response } = require('../http');
+const { ok, fail, corsHeaders } = require('../http');
 
 exports.handler = async (event) => {
   const {
@@ -12,40 +12,44 @@ exports.handler = async (event) => {
     requestContext,
   } = event;
 
-  const auth = buildAuthContext(requestContext);
+  const auth = await buildAuthContext(requestContext);
 
   try {
+    if (event.httpMethod === "OPTIONS") {
+      return { statusCode: 204, headers: corsHeaders, body: "" };
+    }
+
     const parsedBody = body ? JSON.parse(body) : null;
 
     // --- Courses ---
     if (resource === "/courses" && httpMethod === "GET") {
       const items = await listCourses();
-      return response(200, items);
+      return ok(items);
     }
 
     if (resource === "/courses" && httpMethod === "POST") {
       const item = await createCourse(auth, parsedBody || {});
-      return response(201, item);
+      return ok(item);
     }
 
     if (resource === "/courses/{courseId}/enroll" && httpMethod === "POST") {
       const { courseId } = pathParameters;
       const item = await enrollCourse(auth, courseId, parsedBody || {});
-      return response(201, item);
+      return ok(item);
     }
 
     if (resource === "/courses/{courseId}/members" && httpMethod === "GET") {
       const { courseId } = pathParameters;
       const items = await listCourseMembers(auth, courseId);
-      return response(200, items);
+      return ok(items);
     }
 
     // courses Lambda で扱わないパス → 404
-    return response(404, { message: "Not Found" });
+    return fail("Not Found", 404);
   } catch (e) {
     console.error(e);
     const status = e.statusCode || 500;
-    return response(status, { message: e.message ?? "Internal Server Error" });
+    return fail(e.message, status);
   }
 };
 

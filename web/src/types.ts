@@ -26,3 +26,11 @@ export type Message = {
   postedAt: string;
   [key: string]: any;
 };
+
+export type Video = {
+  videoId: string;
+  title: string;
+  order?: number;
+  duration?: number;
+  url: string;
+}

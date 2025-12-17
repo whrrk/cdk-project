@@ -1,3 +1,9 @@
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, QueryCommand } = require("@aws-sdk/lib-dynamodb");
+
+const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const TABLE_NAME = process.env.TABLE_NAME;
+
 async function getAuthContext(auth) {
   const userId = auth.userId;
   const email = auth.email;
@@ -12,16 +18,62 @@ async function getAuthContext(auth) {
   return { userId, email, role, groups };
 }
 
-function requireRole(ctx, allowedRoles) {
-  console.log("Checking roles:", ctx.role, allowedRoles);
-  if (!allowedRoles.includes(ctx.role)) {
+async function getClaims(event) {
+  const claims =
+    event?.requestContext?.authorizer?.jwt?.claims ||
+    event?.requestContext?.authorizer?.claims;
+
+  if (!claims) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    throw err;
+  }
+  return claims;
+}
+
+
+async function requireRole(claims, allowedRoles = []) {
+  const groups = claims["cognito:groups"];
+  const userRoles = Array.isArray(groups)
+    ? groups
+    : typeof groups === "string"
+      ? groups.split(",")
+      : [];
+
+  const ok = allowedRoles.some(r => userRoles.includes(r));
+  if (!ok) {
     const err = new Error("Forbidden");
     err.statusCode = 403;
     throw err;
   }
 }
 
-function buildAuthContext(requestContext) {
+// ユーザーがそのコースに属しているか確認
+async function requireEnrolled(userId, courseId) {
+  const res = await db.send(
+    new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: "GSI1", // ★ 콘솔에서 확인한 실제 GSI 이름
+      KeyConditionExpression: "gsi1pk = :pk AND gsi1sk = :sk",
+      ExpressionAttributeValues: {
+        ":pk": `USER#${userId}`,
+        ":sk": `COURSE#${courseId}`,
+      },
+      Limit: 1,
+    })
+  );
+
+  if (!res.Items || res.Items.length === 0) {
+    const err = new Error("Forbidden: not enrolled");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  return res.Items[0];
+}
+
+
+async function buildAuthContext(requestContext) {
   const authorizer = requestContext && requestContext.authorizer;
   const claims = authorizer && authorizer.claims;
   const userId =
@@ -50,4 +102,10 @@ function buildAuthContext(requestContext) {
   };
 }
 
-module.exports =  { getAuthContext, requireRole, buildAuthContext };
+module.exports = {
+  getClaims,
+  getAuthContext,
+  requireRole,
+  requireEnrolled,
+  buildAuthContext
+};

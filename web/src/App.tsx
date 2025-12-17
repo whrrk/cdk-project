@@ -5,7 +5,8 @@ import { useAuth } from "./auth/AuthContext";
 import AuthSection from "./components/Auth/AuthSection";
 import CoursesSection from "./components/Courses/CoursesSection";
 import ThreadsSection from "./components/Threads/ThreadsSection";
-import type { Course, Message, Thread } from "./types";
+import VideoSection from "./components/Videos/VideoSection";
+import type { Course, Message, Thread, Video } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -19,6 +20,10 @@ function App() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [newThreadTitle, setNewThreadTitle] = useState("");
+
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -63,6 +68,27 @@ function App() {
       setError(e.message ?? "Unknown error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVideos = async (course: Course) => {
+    const courseId = extractCourseId(course);
+    if (!courseId) {
+      setError("courseId を解決できません");
+      return;
+    }
+    setLoadingVideos(true);
+    setError(null);
+    try {
+      const data = await authedFetch(`/courses/${courseId}/videos`, { method: "GET" });
+      const list = Array.isArray(data) ? data : [];
+      setVideos(list);
+      setSelectedVideoId(list[0]?.videoId ?? null);
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message ?? "Unknown error");
+    } finally {
+      setLoadingVideos(false);
     }
   };
 
@@ -199,9 +225,14 @@ function App() {
 
   const handleSelectCourse = (course: Course) => {
     setSelectedCourse(course);
+
     setSelectedThread(null);
     setMessages([]);
     loadThreads(course);
+
+    setVideos([]);
+    setSelectedVideoId(null);
+    loadVideos(course);
   };
 
   const handleSelectThread = (thread: Thread) => {
@@ -291,21 +322,37 @@ function App() {
           extractCourseId={extractCourseId}
           canManageCourses={canManageCourses}
         />
-
         {selectedCourse ? (
-          <ThreadsSection
-            isLoggedIn={isLoggedIn}
-            loading={loading}
-            selectedCourse={selectedCourse}
-            threads={threads}
-            selectedThread={selectedThread}
-            newThreadTitle={newThreadTitle}
-            onCreateThread={createThread}
-            onSelectThread={handleSelectThread}
-            onNewThreadTitleChange={setNewThreadTitle}
-            extractCourseId={extractCourseId}
-            extractThreadId={extractThreadId}
-          />
+          <div className="right-column">
+            <VideoSection
+              isLoggedIn={isLoggedIn}
+              loadingVideos={loadingVideos}
+              videos={videos}
+              selectedCourse={selectedCourse}
+              extractCourseId={extractCourseId}
+              onLoadVideos={(courseId) =>
+                selectedCourse && extractCourseId(selectedCourse) === courseId
+                  ? loadVideos(selectedCourse)
+                  : loadVideos({ ...selectedCourse, courseId } as Course) // 안전하게 하려면 그냥 loadVideos(selectedCourse)만 써도 됨
+              }
+              selectedVideoId={selectedVideoId}
+              onSelectVideo={setSelectedVideoId}
+            />
+
+            <ThreadsSection
+              isLoggedIn={isLoggedIn}
+              loading={loading}
+              selectedCourse={selectedCourse}
+              threads={threads}
+              selectedThread={selectedThread}
+              newThreadTitle={newThreadTitle}
+              onCreateThread={createThread}
+              onSelectThread={handleSelectThread}
+              onNewThreadTitleChange={setNewThreadTitle}
+              extractCourseId={extractCourseId}
+              extractThreadId={extractThreadId}
+            />
+          </div>
         ) : (
           <section className="panel panel-placeholder">
             <div className="panel-header">

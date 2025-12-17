@@ -5,6 +5,7 @@ import { ApiStack } from "../stacks/ApiStack";
 import { DatabaseStack } from "../stacks/DatabaseStack";
 import { LambdaStack } from "../stacks/LambdaStack";
 import { WebStack } from "../stacks/WebStack";
+import { StorageStack } from "../stacks/storageStack";
 
 export class AppStage extends Stage {
   public readonly apiUrlOutput: CfnOutput;
@@ -24,11 +25,15 @@ export class AppStage extends Stage {
     // DB
     const db = new DatabaseStack(this, "DatabaseStack", { env });
 
+    // Storage
+    const storageStack = new StorageStack(this, "StorageStack");
+
     // Lambda
     const lambda = new LambdaStack(this, 'LambdaStack', {
       env,
       userPool: auth.userPool,
       table: db.table,
+      videoBucket: storageStack.videoBucket
     });
 
     // API
@@ -37,6 +42,7 @@ export class AppStage extends Stage {
       userPool: auth.userPool,
       courseHandler: lambda.courseHandler,
       threadHandler: lambda.threadHandler,
+      videoHandler: lambda.videoHandler,
     });
 
     // Front

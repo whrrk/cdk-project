@@ -1,9 +1,8 @@
 // api/threads.js
 
 const { createThread, listThreads, postMessage, listMessages } = require('../service/threadsService');
-const { response } = require('../http');
+const { ok, fail, corsHeaders } = require('../http');
 const { buildAuthContext } = require('../auth');
-
 
 exports.handler = async (event) => {
   const {
@@ -14,9 +13,13 @@ exports.handler = async (event) => {
     requestContext,
   } = event;
 
-  const auth = buildAuthContext(requestContext);
+  const auth = await buildAuthContext(requestContext);
 
   try {
+    if (event.httpMethod === "OPTIONS") {
+      return { statusCode: 204, headers: corsHeaders, body: "" };
+    }
+
     const parsedBody = body ? JSON.parse(body) : null;
 
     // --- Threads ---
@@ -26,13 +29,13 @@ exports.handler = async (event) => {
     ) {
       const { courseId } = pathParameters;
       const item = await createThread(auth, courseId, parsedBody || {});
-      return response(201, item);
+      return ok(item);
     }
 
     if (resource === "/courses/{courseId}/threads" && httpMethod === "GET") {
       const { courseId } = pathParameters;
       const items = await listThreads(auth, courseId);
-      return response(200, items);
+      return ok(items);
     }
 
     if (
@@ -41,7 +44,7 @@ exports.handler = async (event) => {
     ) {
       const { threadId } = pathParameters;
       const item = await postMessage(auth, threadId, parsedBody || {});
-      return response(201, item);
+      return ok(item);
     }
 
     if (
@@ -50,14 +53,14 @@ exports.handler = async (event) => {
     ) {
       const { threadId } = pathParameters;
       const items = await listMessages(auth, threadId);
-      return response(200, items);
+      return ok(items);
     }
 
     // threads Lambda で扱わないパス → 404
-    return response(404, { message: "Not Found" });
+    return fail("Not Found", 404);
   } catch (e) {
     console.error(e);
     const status = e.statusCode || 500;
-    return response(status, { message: e.message ?? "Internal Server Error" });
+    return fail(e.message, status);
   }
 };

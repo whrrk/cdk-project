@@ -1,6 +1,8 @@
+const { requireEnrolled } = require("../auth");
+
 const { docClient, PutCommand, QueryCommand } = require("../db");
 
-const TABLE_NAME =process.env.TABLE_NAME ||"LocalTable"; // 最後 fallback
+const TABLE_NAME = process.env.TABLE_NAME || "LocalTable"; // 最後 fallback
 
 // 簡単なID生成（本番なら uuid 等を使う）
 function generateId(prefix) {
@@ -22,36 +24,12 @@ async function getThreadById(threadId) {
   return result.Items?.[0] ?? null;
 }
 
-// ユーザーがそのコースに属しているか確認
-async function ensureUserEnrolled(userId, courseId) {
-  const res = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "#pk = :pk AND #sk = :sk",
-      ExpressionAttributeNames: {
-        "#pk": "pk",
-        "#sk": "sk",
-      },
-      ExpressionAttributeValues: {
-        ":pk": `ENROLL#COURSE#${courseId}`,
-        ":sk": `USER#${userId}`,
-      },
-    })
-  );
-
-  if (!res.Items || res.Items.length === 0) {
-    const err = new Error("Forbidden: not enrolled");
-    err.statusCode = 403;
-    throw err;
-  }
-}
-
 // POST /courses/{courseId}/threads
 // input: { title, createdBy }
 async function createThread(auth, courseId, input) {
   if (auth.groups === "STUDENT") {
     console.log("Checking enrollment for user:", auth.userId, "in course:", courseId);
-    await ensureUserEnrolled(auth.userId, courseId);
+    await requireEnrolled(auth.userId, courseId);
   }
 
   const threadId = input.threadId || generateId("thread");
@@ -83,8 +61,8 @@ async function createThread(auth, courseId, input) {
 
 // GET /courses/{courseId}/threads
 async function listThreads(auth, courseId) {
-  if (auth.groups.includes("STUDENT")) {
-    await ensureUserEnrolled(auth.userId, courseId);
+  if (auth.groups === "STUDENT") {
+    await requireEnrolled(auth.userId, courseId);
   }
 
   const result = await docClient.send(
@@ -112,8 +90,8 @@ async function postMessage(auth, threadId, input) {
     throw new Error("Thread not found");
   }
 
-  if (auth.groups.includes("STUDENT")) {
-    await ensureUserEnrolled(auth.userId, thread.courseId);
+  if (auth.groups === "STUDENT") {
+    await requireEnrolled(auth.userId, thread.courseId);
   }
   const timestamp = Date.now();
   const sk = `MSG#${timestamp}`;
@@ -145,8 +123,8 @@ async function listMessages(auth, threadId) {
     throw new Error("Thread not found");
   }
 
-  if (auth.groups.includes("STUDENT")) {
-    await ensureUserEnrolled(auth.userId, thread.courseId);
+  if (auth.groups === "STUDENT") {
+    await requireEnrolled(auth.userId, thread.courseId);
   }
 
   const result = await docClient.send(
@@ -168,7 +146,6 @@ async function listMessages(auth, threadId) {
 }
 
 module.exports = {
-  ensureUserEnrolled,
   getThreadById,
   createThread,
   listThreads,
