@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e  # エラーが出たら即終了
 
-PROFILE=wh
+PROFILE=cdk-deploy
 REGION=ap-northeast-1
 WEB_STACK=Dev-WebStack
 

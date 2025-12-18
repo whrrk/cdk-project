@@ -61,5 +61,7 @@ export class LambdaStack extends Stack {
     userPool.grant(this.videoHandler, 'cognito-idp:AdminGetUser');
 
     videoBucket.grantRead(this.courseHandler);
+    videoBucket.grantPut(this.videoHandler);
+    videoBucket.grantRead(this.videoHandler);
   }
 }

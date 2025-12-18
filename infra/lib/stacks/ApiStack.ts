@@ -41,7 +41,6 @@ export class ApiStack extends Stack {
       },
     });
 
-
     this.apiUrlOutput = new CfnOutput(this, "ApiUrl", {
       value: this.restApi.url ?? "",
     });
@@ -94,6 +93,9 @@ export class ApiStack extends Stack {
     const videos = course.addResource('videos');   // ✅ 추가
     videos.addMethod('GET', videoIntegration, authOptions);     // GET /courses/{courseId}/videos
     videos.addMethod('POST', videoIntegration, authOptions);
+
+    const upload = videos.addResource('upload');
+    upload.addMethod('POST', videoIntegration, authOptions);
 
     const enroll = course.addResource('enroll');
     enroll.addMethod('POST', courseIntegration, authOptions);

@@ -8,15 +8,18 @@ type VideoSectionProps = {
 
     onLoadVideos: (courseId: string) => void;
 
-    // optional: 영상 선택/재생 UX를 위해
+    // optional: 映像 選択/再生 UXを為
     selectedVideoId?: string | null;
     onSelectVideo?: (videoId: string) => void;
 
     extractCourseId: (course: Course) => string | null;
     className?: string;
 
-    // optional: teacher용 업로드 버튼 붙일 때
+    // optional: teacher用アップロード
     canManageVideos?: boolean;
+
+    onUploadVideo?: (file: File, title: string) => void;
+    canUpload?: boolean;
 };
 
 const VideoSection = ({
@@ -29,6 +32,8 @@ const VideoSection = ({
     className,
     selectedVideoId,
     onSelectVideo,
+    canUpload,
+    onUploadVideo
 }: VideoSectionProps) => {
     const courseId = selectedCourse ? extractCourseId(selectedCourse) : null;
 
@@ -63,6 +68,21 @@ const VideoSection = ({
             {selectedCourse && !courseId && (
                 <p className="empty-state">講座IDの取得に失敗しました。</p>
             )}
+
+            {canUpload && (
+                <div className="upload-box">
+                    <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            onUploadVideo?.(file, file.name);
+                        }}
+                    />
+                </div>
+            )
+            }
 
             {selectedCourse && courseId && (
                 <>

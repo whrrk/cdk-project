@@ -138,6 +138,63 @@ function App() {
     }
   };
 
+  // ① presigned URL 요청
+  const requestVideoUpload = async (courseId: string, file: File) => {
+    return authedFetch(`/courses/${courseId}/videos/upload`, {
+      method: "POST",
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type,
+      }),
+    });
+  };
+
+  // ② S3로 실제 업로드
+  const uploadToS3 = async (uploadUrl: string, file: File) => {
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+  };
+
+  const saveVideoMetadata = async (
+    courseId: string,
+    payload: { title: string; s3Key: string }
+  ) => {
+    await authedFetch(`/courses/${courseId}/videos`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  };
+
+  const handleUploadVideo = async (file: File, title: string) => {
+    if (!selectedCourse) return;
+    const courseId = extractCourseId(selectedCourse);
+    if (!courseId) return;
+
+    try {
+      // 1. presigned URL 受け取る
+      const { uploadUrl, s3Key } = await requestVideoUpload(courseId, file);
+
+      // 2. S3にアップロード
+      await uploadToS3(uploadUrl, file);
+
+      // 3. DynamoDBに メタデータ 保存
+      await saveVideoMetadata(courseId, {
+        title,
+        s3Key,
+      });
+
+      // 4. リスト再ロード
+      await loadVideos(selectedCourse);
+    } catch (e: any) {
+      setError(e.message ?? "動画アップロード失敗");
+    }
+  };
+
   const loadThreads = async (course: Course) => {
     if (!course) return;
     const courseId = extractCourseId(course);
@@ -333,6 +390,8 @@ function App() {
               ? loadVideos(selectedCourse)
               : loadVideos({ ...selectedCourse, courseId } as Course) // 안전하게 하려면 그냥 loadVideos(selectedCourse)만 써도 됨
             }
+            canUpload={canManageCourses}
+            onUploadVideo={handleUploadVideo}
             selectedVideoId={selectedVideoId}
             onSelectVideo={setSelectedVideoId} /><ThreadsSection
               isLoggedIn={isLoggedIn}
