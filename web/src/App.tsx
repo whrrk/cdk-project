@@ -388,7 +388,7 @@ function App() {
             extractCourseId={extractCourseId}
             onLoadVideos={(courseId) => selectedCourse && extractCourseId(selectedCourse) === courseId
               ? loadVideos(selectedCourse)
-              : loadVideos({ ...selectedCourse, courseId } as Course) // 안전하게 하려면 그냥 loadVideos(selectedCourse)만 써도 됨
+              : loadVideos({ ...selectedCourse, courseId } as Course) // loadVideos(selectedCourse)だけでいい
             }
             canUpload={canManageCourses}
             onUploadVideo={handleUploadVideo}

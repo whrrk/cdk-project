@@ -14,7 +14,6 @@ async function getAuthContext(auth) {
   if (groups.includes("STUDENT")) role = "STUDENT";
   if (groups.includes("ADMIN")) role = "ADMIN";
 
-  console.log("Auth context:", { userId, email, role, groups });
   return { userId, email, role, groups };
 }
 
@@ -31,9 +30,8 @@ async function getClaims(event) {
   return claims;
 }
 
-
 async function requireRole(claims, allowedRoles = []) {
-  const groups = claims["cognito:groups"];
+  const groups = claims?.groups;
   const userRoles = Array.isArray(groups)
     ? groups
     : typeof groups === "string"

@@ -32,7 +32,7 @@ async function listCourses() {
 // input: { title, description?, teacherId? }
 async function createCourse(auth, input) {
   const ctx = await getAuthContext(auth);
-  requireRole(ctx, ["TEACHER"]);
+  await requireRole(ctx, ["TEACHER"]);
 
   const courseId = input.courseId || generateId("course");
 
@@ -69,7 +69,6 @@ async function enrollCourse(auth, courseId, input) {
     throw new Error("enroll は STUDENT のみサポートされています");
   }
 
-  console.log("Enrolling user", authUserId, "to course", courseId, "as", auth.role);
   const item = {
     pk: `ENROLL#COURSE#${courseId}`,
     sk: `USER#${authUserId}`,

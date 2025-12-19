@@ -1,4 +1,4 @@
-const { listCourseVideos, createCourseVideos } = require('../service/videosService');
+const { listCourseVideos, uploadCourseVideos, saveVideoMetadata } = require('../service/videosService');
 const { ok, fail, corsHeaders } = require('../http');
 const { buildAuthContext } = require('../auth');
 
@@ -7,7 +7,7 @@ exports.handler = async (event) => {
         httpMethod,
         resource,
         pathParameters = {},
-        // body,
+        body,
         requestContext,
     } = event;
 
@@ -18,21 +18,26 @@ exports.handler = async (event) => {
             return { statusCode: 204, headers: corsHeaders, body: "" };
         }
 
-        //post時
-        // const parsedBody = body ? JSON.parse(body) : null;
+        const { courseId } = pathParameters;
 
+        //ここから
         if (resource === "/courses/{courseId}/videos" && httpMethod === "GET") {
-            const { courseId } = pathParameters;
             const items = await listCourseVideos(auth, courseId);
             return ok(items);
         }
 
-        //後ほどCreateCourseVideo
-        // if (resource === "/courses/{courseId}/videos" && httpMethod === "POST") {
-        //     const { courseId } = pathParameters;
-        //     const items = await listCourseVideos(auth, courseId);
-        //     return ok(items);
-        // }
+        if (resource === "/courses/{courseId}/videos" && httpMethod === "POST") {
+            const { title, s3Key } = JSON.parse(body || "{}");
+            const items = await saveVideoMetadata(courseId, title, s3Key, auth.userId);
+            return ok(items);
+        }
+
+        const parsedBody = body ? JSON.parse(body) : null;
+
+        if (resource === "/courses/{courseId}/videos/upload" && httpMethod === "POST") {
+            const result = await uploadCourseVideos(auth, parsedBody, courseId);
+            return ok(result);
+        }
 
         // videos Lambda で扱わないパス → 404
         return fail("Not Found", 404);

@@ -25,7 +25,7 @@ if (isLocal) {
   const DYNAMO_ENDPOINT = process.env.DYNAMO_ENDPOINT;
 
   // DynamoDB Local 접속 (Docker에서 8000 포트)
-  console.log("DynamoDB Local → http://localhost:8000");
+  // console.log("DynamoDB Local → http://localhost:8000");
 
   client = new DynamoDBClient({
     region: "ap-northeast-1",
@@ -34,7 +34,7 @@ if (isLocal) {
 
 } else {
   // AWS DynamoDB 接続 (基本設定, CDKが IAM 権限 提供)
-  console.log("AWS DynamoDB 稼働中");
+  // console.log("AWS DynamoDB 稼働中");
 
   client = new DynamoDBClient({});
 }

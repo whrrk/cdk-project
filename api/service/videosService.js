@@ -1,8 +1,16 @@
-const { requireEnrolled } = require("../auth");
+const { requireEnrolled, getAuthContext, requireRole } = require("../auth");
+const { fail } = require("../http");
 const { docClient, PutCommand, QueryCommand } = require("../db");
+
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand, PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 
 const TABLE_NAME = process.env.TABLE_NAME || "LocalTable"; // 最後 fallback
 const VIDEO_BUCKET = process.env.VIDEO_BUCKET;
+
+const s3 = new S3Client({
+    region: process.env.AWS_REGION || "ap-northeast-1",
+});
 
 async function listCourseVideos(auth, courseId) {
     if (!courseId) {
@@ -18,7 +26,6 @@ async function listCourseVideos(auth, courseId) {
     }
 
     if (auth.groups === "STUDENT") {
-        console.log("Checking enrollment for user:", auth.userId, "in course:", courseId);
         await requireEnrolled(auth.userId, courseId);
     }
 
@@ -67,9 +74,68 @@ async function listCourseVideos(auth, courseId) {
     return { courseId, videos };
 }
 
-async function createCourseVideos(auth, courseId) {
+async function uploadCourseVideos(auth, body, courseId) {
+    try {
+        const ctx = await getAuthContext(auth);
 
+        await requireRole(ctx, ["TEACHER"]);
+
+        const { filename, contentType } = body;
+
+        const key = `courses/${courseId}/${Date.now()}_${filename}`;
+
+        const command = new PutObjectCommand({
+            Bucket: VIDEO_BUCKET,
+            Key: key,
+            ContentType: contentType,
+        });
+
+        const uploadUrl = await getSignedUrl(s3, command, {
+            expiresIn: 60 * 5,
+        });
+
+        return {
+            uploadUrl,
+            s3Key: key
+        };
+    } catch (e) {
+        console.error("uploadCourseVideos error:", e?.message || e, e?.stack);
+
+        e.statu
+        if (e?.message === "Forbidden") {
+            return fail(403, { message: "Forbidden" });
+        }
+
+        // 認証(にんしょう)が無い / 壊(こわ)れてる場合
+        if ((e?.message || "").includes("Unauthorized")) {
+            return fail("Unauthorized", 401);
+        }
+
+        console.error(e);
+        return fail("Internal Server Error", 500);
+    }
 }
 
+async function saveVideoMetadata(courseId, title, s3Key, userId) {
+    if (!title || !s3Key) throw new Error("title and s3Key are required");
 
-module.exports = { listCourseVideos, createCourseVideos };
+    const videoId = `vid_${Date.now()}`;
+    const item = {
+        pk: `COURSE#${courseId}`,
+        sk: `VIDEO#${videoId}`,
+        type: "VIDEO",
+        title,
+        s3Key,
+        createdAt: new Date().toISOString(),
+        createdBy: userId,
+    };
+
+    await docClient.send(new PutCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: item,
+    }));
+
+    return { videoId, ...item };
+}
+
+module.exports = { listCourseVideos, uploadCourseVideos, saveVideoMetadata };

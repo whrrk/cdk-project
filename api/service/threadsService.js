@@ -28,7 +28,6 @@ async function getThreadById(threadId) {
 // input: { title, createdBy }
 async function createThread(auth, courseId, input) {
   if (auth.groups === "STUDENT") {
-    console.log("Checking enrollment for user:", auth.userId, "in course:", courseId);
     await requireEnrolled(auth.userId, courseId);
   }
 
