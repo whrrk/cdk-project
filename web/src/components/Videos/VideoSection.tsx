@@ -71,18 +71,33 @@ const VideoSection = ({
 
             {canUpload && (
                 <div className="upload-box">
-                    <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            onUploadVideo?.(file, file.name);
-                        }}
-                    />
+                    <div className="upload-box__header">
+                        <div>
+                            <p className="upload-label">動画アップロード</p>
+                            <p className="upload-hint">mp4, mov などのファイルをアップロードできます。</p>
+                        </div>
+                        <span className="upload-tag">Teacher only</span>
+                    </div>
+                    <label className="upload-dropzone">
+                        <input
+                            className="upload-input"
+                            type="file"
+                            accept="video/*"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                onUploadVideo?.(file, file.name);
+                                e.target.value = "";
+                            }}
+                        />
+                        <div className="upload-dropzone__content">
+                            <div className="upload-icon">+</div>
+                            <p className="upload-dropzone__title">ドラッグ & ドロップ</p>
+                            <p className="upload-dropzone__hint">またはクリックして動画を選択</p>
+                        </div>
+                    </label>
                 </div>
-            )
-            }
+            )}
 
             {selectedCourse && courseId && (
                 <>
