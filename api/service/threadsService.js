@@ -1,5 +1,4 @@
 const { requireEnrolled } = require("../auth");
-
 const { docClient, PutCommand, QueryCommand } = require("../db");
 
 const TABLE_NAME = process.env.TABLE_NAME || "LocalTable"; // 最後 fallback

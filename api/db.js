@@ -1,9 +1,3 @@
-// api/db.js
-
-/**
- * アクセスDynamoDB用モジュール
- * DynamoDBクライアントの初期化とエクスポート
- */
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
   DynamoDBDocumentClient,
@@ -14,8 +8,11 @@ const {
   UpdateCommand,
   DeleteCommand
 } = require("@aws-sdk/lib-dynamodb");
+/**
+ * アクセスDynamoDB用モジュール
+ * DynamoDBクライアントの初期化とエクスポート
+ */
 
-// --- 환경 분기 -------------------------------------------------------
 // IS_LOCAL=true ＝＞DynamoDB Local
 const isLocal = process.env.IS_LOCAL === "true";
 
