@@ -97,11 +97,17 @@ const VideoSection = ({
                             <ul className="item-list">
                                 {videos.map((v) => {
                                     const isSelected = v.videoId === (selectedVideoId ?? videos[0]?.videoId);
+                                    const handleClick = () => {
+                                        onSelectVideo?.(v.videoId);
+                                        if (v.url) {
+                                            window.open(v.url, "_blank", "noopener,noreferrer");
+                                        }
+                                    };
                                     return (
                                         <li
                                             key={v.videoId}
                                             className={`item ${isSelected ? "is-selected" : ""}`}
-                                            onClick={() => onSelectVideo?.(v.videoId)}
+                                            onClick={handleClick}
                                         >
                                             <div className="item-title">{v.title || "(no title)"}</div>
                                             <div className="item-meta">

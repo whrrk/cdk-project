@@ -81,7 +81,11 @@ function App() {
     setError(null);
     try {
       const data = await authedFetch(`/courses/${courseId}/videos`, { method: "GET" });
-      const list = Array.isArray(data) ? data : [];
+      const list = Array.isArray(data?.videos)
+        ? data.videos
+        : Array.isArray(data)
+          ? data
+          : [];
       setVideos(list);
       setSelectedVideoId(list[0]?.videoId ?? null);
     } catch (e: any) {
