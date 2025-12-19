@@ -10,6 +10,8 @@ export interface FrontendDeployProps {
    * SPA 用に 404 を index.html にフォールバックするか
    */
   spaFallback?: boolean;
+
+  webAclId?: string;
 }
 
 export class FrontendDeploy extends Construct {
@@ -41,6 +43,7 @@ export class FrontendDeploy extends Construct {
           }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
+        webAclId: props.webAclId, //（WAFアタッチ）
         errorResponses: props.spaFallback
           ? [
             {

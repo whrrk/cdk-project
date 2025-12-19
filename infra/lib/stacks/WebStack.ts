@@ -4,7 +4,9 @@ import { Construct } from 'constructs';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import { FrontendDeploy } from '../construcets/FrontendDeploy';
 
-export interface WebStackProps extends StackProps { }
+export interface WebStackProps extends StackProps {
+  webAclArn?: string;
+}
 
 export class WebStack extends Stack {
   public readonly frontUrlOutput: CfnOutput;
@@ -17,6 +19,7 @@ export class WebStack extends Stack {
 
     const frontend = new FrontendDeploy(this, 'Frontend', {
       spaFallback: true,
+      webAclId: props.webAclArn,
     });
 
     this.distribution = frontend.distribution;

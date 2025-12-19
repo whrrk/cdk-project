@@ -5,7 +5,7 @@ import { ApiStack } from "../stacks/ApiStack";
 import { DatabaseStack } from "../stacks/DatabaseStack";
 import { LambdaStack } from "../stacks/LambdaStack";
 import { WebStack } from "../stacks/WebStack";
-import { StorageStack } from "../stacks/storageStack";
+import { StorageStack } from "./StorageStack";
 
 export class ManualAppStack extends Stack {
     public readonly apiUrlOutput: CfnOutput;

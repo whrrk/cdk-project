@@ -5,25 +5,25 @@ import * as cdk from 'aws-cdk-lib';
 import { PipelineStack } from '../lib/stacks/PipelineStack';
 import { AuthStack } from "../lib/stacks/AuthStack";
 import { DatabaseStack } from '../lib/stacks/DatabaseStack';
-import { StorageStack } from '../lib/stacks/storageStack';
+import { StorageStack } from '../lib/stacks/StorageStack';
 import { LambdaStack } from '../lib/stacks/LambdaStack';
 import { ApiStack } from '../lib/stacks/ApiStack';
 import { WebStack } from '../lib/stacks/WebStack';
+import { WafStack } from "../lib/stacks/WafStack";
 
 const app = new cdk.App();
 
 //production
-// const env = {
-//   account: process.env.CDK_DEFAULT_ACCOUNT,
-//   region: process.env.CDK_DEFAULT_REGION,
-// };
-
-//test
 const env = {
-  account: "749339776410",
-  region: "ap-northeast-1",
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
 };
 
+//test
+// const env = {
+//   account: "749339776",
+//   region: "",
+// };
 
 // cdk.json の context.dev を取得
 const dev = app.node.tryGetContext("dev");
@@ -68,10 +68,18 @@ if (deployMode === "pipeline") {
     stackName: "Dev-ApiStack"
   });
 
+  const waf = new WafStack(app, "WafStack", {
+    env: { account: env.account, region: "us-east-1" }, // ★重要
+    stackName: "Dev-WafStack",
+  });
+
+  // ★ 文字列で受け取る（contextから）
+  const wafWebAclArn = dev.wafWebAclArn as string | undefined
   // Front
   const front = new WebStack(app, "WebStack", {
     env,
-    stackName: "Dev-WebStack"
+    stackName: "Dev-WebStack",
+    webAclArn: wafWebAclArn,
   });
 }
 

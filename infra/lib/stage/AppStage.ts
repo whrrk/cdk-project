@@ -5,7 +5,7 @@ import { ApiStack } from "../stacks/ApiStack";
 import { DatabaseStack } from "../stacks/DatabaseStack";
 import { LambdaStack } from "../stacks/LambdaStack";
 import { WebStack } from "../stacks/WebStack";
-import { StorageStack } from "../stacks/storageStack";
+import { StorageStack } from "../stacks/StorageStack";
 
 export class AppStage extends Stage {
   public readonly apiUrlOutput: CfnOutput;

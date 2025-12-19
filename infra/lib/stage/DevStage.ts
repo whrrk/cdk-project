@@ -6,7 +6,7 @@ import { DatabaseStack } from '../stacks/DatabaseStack';
 import { LambdaStack } from '../stacks/LambdaStack';
 import { ApiStack } from '../stacks/ApiStack';
 import { WebStack } from '../stacks/WebStack';
-import { StorageStack } from '../stacks/storageStack';
+import { StorageStack } from '../stacks/StorageStack';
 
 export class DevStage extends Stage {
   constructor(scope: Construct, id: string, props?: StageProps) {
