@@ -330,6 +330,14 @@ body {
   gap: 8px;
 }
 
+.courses-list,
+.threads-list,
+.video-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .item {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
@@ -384,7 +392,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 380px;
+  max-height: 240px;
   overflow-y: auto;
 }
 

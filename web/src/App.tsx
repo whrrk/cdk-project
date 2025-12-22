@@ -11,6 +11,7 @@ import type { Course, Message, Thread, Video } from "./types";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 function App() {
+  //management status
   const { isLoggedIn, login, logout, idToken, userGroups } = useAuth();
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -33,6 +34,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  //method link to backend
   const authedFetch = async (
     path: string,
     options: RequestInit = {}
@@ -329,6 +331,7 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
+  //link section
   return (
     <div className="app-shell">
       <header className="app-header">

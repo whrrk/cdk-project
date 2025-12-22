@@ -109,7 +109,7 @@ const VideoSection = ({
 
                     {videos.length > 0 && (
                         <div className="video-layout">
-                            <ul className="item-list">
+                            <ul className="item-list video-list">
                                 {videos.map((v) => {
                                     const isSelected = v.videoId === (selectedVideoId ?? videos[0]?.videoId);
                                     const handleClick = () => {

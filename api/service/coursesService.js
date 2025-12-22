@@ -1,5 +1,5 @@
 const { getAuthContext, requireRole } = require("../auth");
-const { docClient, PutCommand, QueryCommand, ScanCommand } = require("../db");
+const { docClient, PutCommand, QueryCommand } = require("../db");
 
 const TABLE_NAME = process.env.TABLE_NAME || "LocalTable"; // 最後 fallback
 
@@ -11,17 +11,17 @@ function generateId(prefix) {
 // GET /courses
 async function listCourses() {
   const result = await docClient.send(
-    new ScanCommand({
+    new QueryCommand({
       TableName: TABLE_NAME,
-      FilterExpression: "begins_with(#pk, :coursePrefix) AND #sk = :meta",
+      IndexName: "GSI_COURSE_LIST",
+      KeyConditionExpression: "#type = :type",
       ExpressionAttributeNames: {
-        "#pk": "pk",
-        "#sk": "sk",
+        "#type": "type",
       },
       ExpressionAttributeValues: {
-        ":coursePrefix": "COURSE#",
-        ":meta": "META",
+        ":type": "COURSE",
       },
+      ScanIndexForward: false, // 최신순(createdAt desc)
     })
   );
 

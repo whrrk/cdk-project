@@ -59,7 +59,7 @@ const ThreadsSection = ({
           Create Thread
         </button>
       </div>
-      <ul className="item-list">
+      <ul className="item-list threads-list">
         {threads.map((thread) => {
           const threadId = extractThreadId(thread);
           const isSelected =

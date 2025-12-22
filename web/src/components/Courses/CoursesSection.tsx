@@ -101,7 +101,7 @@ const CoursesSection = ({
         </button>
       </div>
 
-      <ul className="item-list">
+      <ul className="item-list courses-list">
         {courses.map((course) => {
           const courseId = extractCourseId(course);
           const isSelected =

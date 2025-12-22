@@ -5,7 +5,7 @@ PROFILE=cdk-deploy
 REGION=ap-northeast-1
 WEB_STACK=Dev-WebStack
 
-echo "🔍 Fetching CloudFormation Outputs..."
+echo "##Fetching CloudFormation Outputs..."
 
 WEB_BUCKET=$(aws cloudformation describe-stacks \
   --profile $PROFILE \
@@ -21,20 +21,20 @@ WEB_DIST_ID=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue" \
   --output text)
 
-echo "🪣 S3 Bucket: $WEB_BUCKET"
-echo "🌐 CloudFront Distribution: $WEB_DIST_ID"
+echo "###S3 Bucket: $WEB_BUCKET"
+echo "####CloudFront Distribution: $WEB_DIST_ID"
 
 npm run build
 
-echo "🚀 Uploading frontend..."
+echo "#####Uploading frontend..."
 aws s3 sync dist/ s3://$WEB_BUCKET --delete \
   --profile $PROFILE --region $REGION
 
-echo "♻️ Creating CloudFront invalidation..."
+echo "######Creating CloudFront invalidation..."
 aws cloudfront create-invalidation \
   --distribution-id $WEB_DIST_ID \
   --paths '/*' \
   --no-cli-pager \
   --profile $PROFILE --region $REGION
 
-echo "✅ Frontend deploy completed!"
+echo "#Frontend deploy completed!"

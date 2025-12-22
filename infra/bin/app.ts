@@ -10,6 +10,7 @@ import { LambdaStack } from '../lib/stacks/LambdaStack';
 import { ApiStack } from '../lib/stacks/ApiStack';
 import { WebStack } from '../lib/stacks/WebStack';
 import { WafStack } from "../lib/stacks/WafStack";
+import { MonitoringStack } from '../lib/stacks/MonitoringStack';
 
 const app = new cdk.App();
 
@@ -80,6 +81,15 @@ if (deployMode === "pipeline") {
     env,
     stackName: "Dev-WebStack",
     webAclArn: wafWebAclArn,
+  });
+
+  new MonitoringStack(app, "MonitoringStack", {
+    env,
+    api: api.restApi,
+    stackName: "Dev-MonitoringStack",
+    courseHandler: lambda.courseHandler,
+    threadHandler: lambda.threadHandler,
+    videoHandler: lambda.videoHandler
   });
 }
 
