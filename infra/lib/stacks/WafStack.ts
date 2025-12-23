@@ -41,6 +41,14 @@ export class WafStack extends cdk.Stack {
                         rateBasedStatement: {
                             limit: 100, // 5分あたり
                             aggregateKeyType: "IP",
+                            scopeDownStatement: {
+                                byteMatchStatement: {
+                                    fieldToMatch: { uriPath: {} },
+                                    positionalConstraint: "STARTS_WITH",
+                                    searchString: "/api/",
+                                    textTransformations: [{ priority: 0, type: "NONE" }],
+                                },
+                            },
                         },
                     },
                     visibilityConfig: {
