@@ -35,8 +35,24 @@ export class WafStack extends cdk.Stack {
             },
             rules: [
                 {
-                    name: "AWSManagedCommonRuleSet",
+                    name: "RateLimit",
                     priority: 1,
+                    action: { block: {} },
+                    statement: {
+                        rateBasedStatement: {
+                            limit: 30, // 5分あたり
+                            aggregateKeyType: "IP"
+                        },
+                    },
+                    visibilityConfig: {
+                        cloudWatchMetricsEnabled: true,
+                        metricName: "RateLimit",
+                        sampledRequestsEnabled: true,
+                    },
+                },
+                {
+                    name: "AWSManagedCommonRuleSet",
+                    priority: 2,
                     overrideAction: { none: {} },
                     statement: {
                         managedRuleGroupStatement: {
@@ -47,30 +63,6 @@ export class WafStack extends cdk.Stack {
                     visibilityConfig: {
                         cloudWatchMetricsEnabled: true,
                         metricName: "CommonRules",
-                        sampledRequestsEnabled: true,
-                    },
-                },
-                {
-                    name: "RateLimit",
-                    priority: 2,
-                    action: { block: {} },
-                    statement: {
-                        rateBasedStatement: {
-                            limit: 100, // 5分あたり
-                            aggregateKeyType: "IP",
-                            scopeDownStatement: {
-                                byteMatchStatement: {
-                                    fieldToMatch: { uriPath: {} },
-                                    positionalConstraint: "STARTS_WITH",
-                                    searchString: "/api/",
-                                    textTransformations: [{ priority: 0, type: "NONE" }],
-                                },
-                            },
-                        },
-                    },
-                    visibilityConfig: {
-                        cloudWatchMetricsEnabled: true,
-                        metricName: "RateLimit",
                         sampledRequestsEnabled: true,
                     },
                 },
@@ -112,6 +104,18 @@ export class WafStack extends cdk.Stack {
         new wafv2.CfnLoggingConfiguration(this, "WafLogging", {
             resourceArn: webAcl.attrArn,
             logDestinationConfigs: [wafLogGroup.logGroupArn],
+            loggingFilter: {
+                DefaultBehavior: "DROP",
+                Filters: [
+                    {
+                        Behavior: "KEEP",
+                        Requirement: "MEETS_ANY",
+                        Conditions: [
+                            { ActionCondition: { Action: "BLOCK" } },
+                        ],
+                    },
+                ],
+            },
             // フィルタはCDK/CFNの仕様差でコケることがあるので、まずは無しで安定優先
         }); // :contentReference[oaicite:2]{index=2}
 
@@ -119,7 +123,7 @@ export class WafStack extends cdk.Stack {
         new logs.SubscriptionFilter(this, "WafLogsToLambda", {
             logGroup: wafLogGroup,
             destination: new subscriptions.LambdaDestination(blockerFn),
-            filterPattern: logs.FilterPattern.allEvents(),
+            filterPattern: logs.FilterPattern.literal('{ $.action = "BLOCK" }'),
         });
 
         this.webAclArn = webAcl.attrArn;
