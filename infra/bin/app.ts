@@ -11,6 +11,7 @@ import { ApiStack } from '../lib/stacks/ApiStack';
 import { WebStack } from '../lib/stacks/WebStack';
 import { WafStack } from "../lib/stacks/WafStack";
 import { MonitoringStack } from '../lib/stacks/MonitoringStack';
+import { WafBlockerStack } from '../lib/stacks/WafBlockerStack';
 
 const app = new cdk.App();
 
@@ -69,9 +70,17 @@ if (deployMode === "pipeline") {
     stackName: "Dev-ApiStack"
   });
 
+  const wafEnv = { account: env.account, region: "us-east-1" };
+
+  const wafBlocker = new WafBlockerStack(app, "WafBlockerStack", {
+    env: wafEnv,
+    stackName: "Dev-WafBlockerStack",
+  });
+
   const waf = new WafStack(app, "WafStack", {
-    env: { account: env.account, region: "us-east-1" }, // ★重要
+    env: wafEnv,
     stackName: "Dev-WafStack",
+    blockerFn: wafBlocker.WafBlockerHandler,
   });
 
   // ★ 文字列で受け取る（contextから）

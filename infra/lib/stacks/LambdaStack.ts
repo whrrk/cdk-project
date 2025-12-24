@@ -16,6 +16,7 @@ export class LambdaStack extends Stack {
   public readonly courseHandler: lambda.Function;
   public readonly threadHandler: lambda.Function;
   public readonly videoHandler: lambda.Function;
+  public readonly WafBlockerHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
