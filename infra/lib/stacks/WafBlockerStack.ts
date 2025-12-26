@@ -12,13 +12,13 @@ export class WafBlockerStack extends Stack {
 
         this.WafBlockerHandler = new lambda.Function(this, "WafBlockerHandler", {
             functionName: PhysicalName.GENERATE_IF_NEEDED, // 또는 "dev-waf-blocker" 처럼 고정 문자열
-            runtime: lambda.Runtime.NODEJS_20_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             handler: 'handler/wafBlocker.handler',
             code: lambda.Code.fromAsset('../api'),
         });
 
         this.WafBlockerHandler.addToRolePolicy(
-            new iam.PolicyStatement({
+            new iam.PolicyStatement({g
                 actions: ['wafv2:GetIPSet', 'wafv2:UpdateIPSet'],
                 resources: ['*'],
             })

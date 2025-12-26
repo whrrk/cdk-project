@@ -31,7 +31,7 @@ export class LambdaStack extends Stack {
 
     // /courses 系用
     this.courseHandler = new lambda.Function(this, 'CourseHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'handler/courses.handler',          // api/courses.js の exports.handler
       code: lambda.Code.fromAsset('../api'),
       environment: commonEnv
@@ -39,7 +39,7 @@ export class LambdaStack extends Stack {
 
     // /threads 系用
     this.threadHandler = new lambda.Function(this, 'ThreadHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'handler/threads.handler',          // api/threads.js の exports.handler
       code: lambda.Code.fromAsset('../api'),
       environment: commonEnv,
@@ -47,7 +47,7 @@ export class LambdaStack extends Stack {
 
     // /video 系用
     this.videoHandler = new lambda.Function(this, 'VideoHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'handler/videos.handler',          // api/threads.js の exports.handler
       code: lambda.Code.fromAsset('../api'),
       environment: commonEnv,
