@@ -5,6 +5,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 export interface LambdaStackProps extends StackProps {
   table: dynamodb.Table;
@@ -29,8 +30,18 @@ export class LambdaStack extends Stack {
       VIDEO_BUCKET: videoBucket.bucketName,
     };
 
+    // 
+    /**
+     * tsの場合はlambda.FunctionじゃなくNodejsFunctionに切り替える
+     * その後
+     *   entry: path.join(__dirname, '../../api/handler/courses.ts')
+     *   bundling: {
+     *     externalModules: ['aws-sdk'],
+     *   },
+     * 　上の二つ追加
+     */
     // /courses 系用
-    this.courseHandler = new lambda.Function(this, 'CourseHandler', {
+    this.courseHandler = new NodejsFunction(this, 'CourseHandler', {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'handler/courses.handler',          // api/courses.js の exports.handler
       code: lambda.Code.fromAsset('../api'),

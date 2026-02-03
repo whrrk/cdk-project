@@ -18,7 +18,7 @@ export class WafBlockerStack extends Stack {
         });
 
         this.WafBlockerHandler.addToRolePolicy(
-            new iam.PolicyStatement({g
+            new iam.PolicyStatement({
                 actions: ['wafv2:GetIPSet', 'wafv2:UpdateIPSet'],
                 resources: ['*'],
             })
